@@ -7105,6 +7105,7 @@ pub(super) fn damage_type(kind: horizon_client::mobs::DamageKind, caused: bool) 
         K::WindCharge => "minecraft:wind_charge",
         K::Wither => "minecraft:wither",
         K::WitherSkull => "minecraft:wither_skull",
+        K::Named(d) => d.name,
     }
 }
 /// A Horizon item stack as a loot stack (id, count, damage, enchantments).

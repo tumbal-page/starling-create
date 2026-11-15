@@ -627,6 +627,7 @@ impl DamageKind {
         matches!(self, DamageKind::OutOfWorld | DamageKind::GenericKill)
     }
 }
+
 /// `source.getEntity()` of a blow, as `SulfurCube.knockback` reads it: `getEyePosition()`,
 /// `getLookAngle()` and `position()`.
 #[derive(Clone, Copy, Debug, PartialEq)]

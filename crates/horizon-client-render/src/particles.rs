@@ -20,7 +20,7 @@ use horizon_core::{
 use horizon_world::block_collision::BlockCollisionRegistry;
 use std::{
     collections::{HashMap, HashSet},
-    fmt::Debug,
+    fmt,
     path::Path,
 };
 
