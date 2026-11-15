@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Create 6.0.10 BasinBlock/MillstoneBlock.updateEntityAfterFallOn. Called by
 // the owned ItemEntity movement callback, after the ordinary collision response.
-use super::Game;
+use super::GameLevel;
 use crate::{
     containers::{BlockEntity, ModBlockEntity},
     items::ItemStack,
@@ -59,7 +59,7 @@ fn live_or_fresh(entity: &ModBlockEntity, inventory: Inventory) -> bool {
                     .all(|key| !entity.nbt.contains_key(&(*key).into())))
 }
 
-fn entity_at<'a>(game: &'a Game<'_>, pos: Pos, inventory: Inventory) -> Option<&'a ModBlockEntity> {
+fn entity_at<'a>(game: &'a GameLevel<'_>, pos: Pos, inventory: Inventory) -> Option<&'a ModBlockEntity> {
     match game.world.block_entities.get(&(pos[0], pos[1], pos[2]))? {
         BlockEntity::Mod(entity) if entity.id == inventory.id() => Some(entity),
         _ => None,
@@ -69,7 +69,7 @@ fn entity_at<'a>(game: &'a Game<'_>, pos: Pos, inventory: Inventory) -> Option<&
 /// A read-only admission pass avoids native_with_mod_block_entity's unconditional
 /// dirty/revision work on refusal. No entity, inventory or opaque NBT is cloned.
 fn admission(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: Pos,
     inventory: Inventory,
     stack: &ItemStack,
@@ -106,7 +106,7 @@ fn admission(
 }
 
 fn insert(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     inventory: Inventory,
     client: bool,
@@ -155,10 +155,12 @@ fn insert(
 }
 
 pub(super) fn after_vertical_collision(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     dimension: &str,
     client: bool,
+    entity: u32,
     state: BlockStateId,
+    block_pos: [i32; 3],
     item_pos: [f64; 3],
     stack: &mut ItemStack,
     discard: &mut bool,
