@@ -309,7 +309,7 @@ impl Game<'_> {
     /// frustum. Entity occlusion culling is for ordinary entities; block
     /// entities use these renderer-provided bounds instead.
     pub(super) fn mod_block_entity_geometry<'a>(
-        &self,
+        &mut self,
         blocks: impl Iterator<Item = &'a ([i32; 3], u32)>,
         camera: DVec3,
         partial: f32,

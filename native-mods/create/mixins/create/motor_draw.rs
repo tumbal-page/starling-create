@@ -1,7 +1,9 @@
 fn motor_draw(
-    game: &crate::game::GameLevel<'_>,
+    game: &mut crate::game::Game<'_>,
     batch: &mut horizon_client::hud::HudBatch,
     screen: &crate::mod_api::NativeScreenView<'_>,
 ) {
-    crate::game::create_port_motor_value_ui::draw(game, batch, screen);
+    game.with_level(|_, level, _| {
+        crate::game::create_port_motor_value_ui::draw(level, batch, screen);
+    });
 }

@@ -161,7 +161,7 @@ hook_version = 1
 kind = "HEAD"
 helper = "draw.rs"
 bindings = [
-  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
   { name = "pos", ty = "[i32; 3]", value = "pos" },
   { name = "block", ty = "&str", value = "block" },
   { name = "state", ty = "horizon_world::registry::BlockStateId", value = "state" },
@@ -217,7 +217,7 @@ kind = "HEAD"
 cancellable = true
 helper = "depot_prediction.rs"
 bindings = [
-  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
   { name = "hit", ty = "&crate::game::Hit", value = "hit" },
   { name = "held", ty = "Option<&crate::items::ItemStack>", value = "held" },
 ]
@@ -345,7 +345,7 @@ hook_version = 1
 kind = "HEAD"
 helper = "motor_draw.rs"
 bindings = [
-  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
   { name = "batch", ty = "&mut horizon_client::hud::HudBatch", value = "&mut *batch" },
   { name = "screen", ty = "&crate::mod_api::NativeScreenView<'_>", value = "screen" },
 ]
@@ -357,7 +357,7 @@ hook_version = 1
 kind = "HEAD"
 helper = "motor_click.rs"
 bindings = [
-  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
   { name = "screen", ty = "&crate::mod_api::NativeScreenView<'_>", value = "screen" },
   { name = "button", ty = "i32", value = "button" },
   { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
@@ -370,7 +370,7 @@ hook_version = 1
 kind = "HEAD"
 helper = "motor_drag.rs"
 bindings = [
-  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
   { name = "screen", ty = "&crate::mod_api::NativeScreenView<'_>", value = "screen" },
   { name = "button", ty = "i32", value = "button" },
   { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
@@ -383,7 +383,7 @@ hook_version = 1
 kind = "HEAD"
 helper = "motor_release.rs"
 bindings = [
-  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
   { name = "screen", ty = "&crate::mod_api::NativeScreenView<'_>", value = "screen" },
   { name = "button", ty = "i32", value = "button" },
   { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
@@ -396,7 +396,7 @@ hook_version = 1
 kind = "HEAD"
 helper = "motor_key_release.rs"
 bindings = [
-  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
   { name = "screen", ty = "&crate::mod_api::NativeScreenView<'_>", value = "screen" },
   { name = "key", ty = "&str", value = "key" },
   { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
@@ -409,7 +409,7 @@ hook_version = 1
 kind = "HEAD"
 helper = "motor_scroll.rs"
 bindings = [
-  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
   { name = "screen", ty = "&crate::mod_api::NativeScreenView<'_>", value = "screen" },
   { name = "scroll", ty = "[f64; 2]", value = "scroll" },
   { name = "modifiers", ty = "u32", value = "modifiers" },
@@ -695,7 +695,7 @@ hook_version = 1
 kind = "HEAD"
 helper = "render_bounds.rs"
 bindings = [
- {name="game",ty="&crate::game::Game<'_>",value="self"},
+ {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
  {name="pos",ty="[i32;3]",value="pos"},
  {name="block",ty="&str",value="block"},
  {name="entity",ty="&crate::containers::ModBlockEntity",value="entity"},
@@ -923,7 +923,7 @@ hook="client_resources_reloaded"
 hook_version=1
 kind="HEAD"
 helper="burner_resources.rs"
-bindings=[{name="game",ty="&crate::game::Game<'_>",value="self"}]
+bindings=[{name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"}]
 
 [[module]]
 id="burner-sync"
@@ -965,7 +965,7 @@ hook_version=1
 kind="HEAD"
 helper="burner_sync_logout.rs"
 bindings=[
- {name="game",ty="&crate::game::Game<'_>",value="self"},
+ {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
  {name="player",ty="u128",value="player"},
 ]
 
@@ -976,7 +976,7 @@ hook_version=1
 kind="HEAD"
 helper="burner_sync_world.rs"
 bindings=[
- {name="game",ty="&crate::game::Game<'_>",value="self"},
+ {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
  {name="phase",ty="crate::mod_api::WorldPhase",value="phase"},
 ]
 

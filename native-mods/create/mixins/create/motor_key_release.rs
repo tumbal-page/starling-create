@@ -1,8 +1,10 @@
 fn motor_key_release(
-    game: &crate::game::GameLevel<'_>,
+    game: &mut crate::game::Game<'_>,
     screen: &crate::mod_api::NativeScreenView<'_>,
     key: &str,
     canceled: &mut bool,
 ) {
-    crate::game::create_port_motor_value_ui::key_release(game, screen, key, canceled);
+    game.with_level(|_, level, _| {
+        crate::game::create_port_motor_value_ui::key_release(level, screen, key, canceled);
+    });
 }
