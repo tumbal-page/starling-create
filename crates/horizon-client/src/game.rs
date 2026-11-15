@@ -941,7 +941,7 @@ struct InteractTarget {
 }
 
 /// The client world as seen by the vanilla block-behaviour library.
-struct GameLevel<'w> {
+pub struct GameLevel<'w> {
     world: &'w mut World,
     redstone_experiments: bool,
     facts: &'w BlockFacts,

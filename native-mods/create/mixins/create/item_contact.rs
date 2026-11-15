@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Create 6.0.10 BasinBlock/MillstoneBlock.updateEntityAfterFallOn. Called by
 // the owned ItemEntity movement callback, after the ordinary collision response.
-use crate::game::GameLevel;
+use super::GameLevel;
 use crate::{
     containers::{BlockEntity, ModBlockEntity},
     items::ItemStack,

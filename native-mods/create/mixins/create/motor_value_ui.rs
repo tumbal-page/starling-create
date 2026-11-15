@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Create 6.0.10 ValueSettingsClient/Screen and KineticScrollValueBehaviour.
 // Rendering uses the original private value_settings.png sheet via the importer.
-use crate::game::GameLevel;
+use super::GameLevel;
 use crate::{containers::BlockEntity, mod_api::NativeScreenView};
 use horizon_client::{
     first_person::Hand,

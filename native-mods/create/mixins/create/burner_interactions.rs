@@ -2,7 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Create6.0.10 ac0c444: BlazeBurnerBlock/BlazeBurnerBlockItem/LitBlazeBurnerBlock.
-use crate::game::GameLevel;
+use super::GameLevel;
 use crate::{containers::BlockEntity, items::ItemStack};
 use horizon_client::particles::{ParticleOptions, ParticleType};
 use horizon_core::random::RandomSource;
