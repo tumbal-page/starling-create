@@ -1,7 +1,8 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Game-side adapter. The engine crate contains the portable algorithms.
-use super::{Game, GameLevel, native_block_entity_draw::BlockEntityDraw};
+use crate::game::GameLevel;
+use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::{
     containers::{BlockEntity, ModBlockEntity, ModContainer},
     items::ItemStack,

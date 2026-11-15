@@ -2,7 +2,8 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // ChainDriveBlock: native state/shape/wrench boundary. Simulation is in engine.
-use super::{Game, GameLevel};
+use crate::game::GameLevel;
+use super::Game;
 use create_engine::{
     chain_drive::{self, Part, State},
     kinetics::Axis,
