@@ -40,3 +40,4 @@
 .horizon-mod-data/
 # Release-only compiled original exporter bundle.
 /exporters/
+.pkgconfig/

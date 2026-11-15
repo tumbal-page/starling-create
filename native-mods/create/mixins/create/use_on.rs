@@ -1,5 +1,5 @@
 fn create_use_on(
-    game: &mut crate::game::GameLevel<'_>,
+    game: &mut crate::game::Game<'_>,
     stack: &crate::items::ItemStack,
     pos: [i32; 3],
     face: [i32; 3],

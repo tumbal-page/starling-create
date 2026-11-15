@@ -6,7 +6,7 @@ use crate::game::{Game, GameLevel, Hand};
 use super::{S, face_direction, hand_id, play};
 use crate::game::create_port_burner_interactions as burner;
 
-pub(in crate::game) fn block(game: &mut GameLevel<'_>, hand: Hand) -> bool {
+pub(in crate::game) fn block(game: &mut Game<'_>, hand: Hand) -> bool {
     if game.spectator() {
         return false;
     }
@@ -45,7 +45,7 @@ pub(in crate::game) fn block(game: &mut GameLevel<'_>, hand: Hand) -> bool {
     true
 }
 
-pub(in crate::game) fn entity(game: &mut GameLevel<'_>, hand: Hand) -> bool {
+pub(in crate::game) fn entity(game: &mut Game<'_>, hand: Hand) -> bool {
     if game.spectator() {
         return false;
     }
@@ -76,7 +76,7 @@ pub(in crate::game) fn entity(game: &mut GameLevel<'_>, hand: Hand) -> bool {
     true // Create's FAIL ends the item turn without an arm swing.
 }
 
-impl GameLevel<'_> {
+impl Game<'_> {
     // client_level_unload also fires during a dimension transition, after the
     // same connection has installed its new level. Server fuel data remains
     // valid there; disconnect/reconfiguration removes heard_level first.

@@ -2,7 +2,7 @@
 // End the click after its normal UseItemOn packet, before item prediction or
 // the other hand can send another exchange. Inventories remain server-owned.
 fn create_depot_prediction(
-    game: &crate::game::GameLevel<'_>,
+    game: &crate::game::Game<'_>,
     hit: &crate::game::Hit,
     held: Option<&crate::items::ItemStack>,
 ) -> std::ops::ControlFlow<(InteractionResult, DryUse)> {

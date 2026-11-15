@@ -1,4 +1,4 @@
-fn create_destroy(game: &mut crate::game::GameLevel<'_>, pos: [i32; 3], canceled: &mut bool) {
+fn create_destroy(game: &mut crate::game::Game<'_>, pos: [i32; 3], canceled: &mut bool) {
     if crate::game::create_port::inventory_blocked(game, pos) {
         *canceled = true;
         return;
