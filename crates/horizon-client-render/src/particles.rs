@@ -4443,6 +4443,22 @@ const CREEPER: [[f64; 2]; 12] = [
     [0.0, -0.4],
 ];
 
+/// Opt-in, compiled particle behavior. The ordinary engine still owns the
+/// particle, its sprite set, interpolation, rendering and total count limits.
+#[derive(Default)]
+pub struct ParticleUpdate {
+    pub frame: Option<usize>,
+    pub spawned: Vec<(ParticleOptions, [f64; 3], [f64; 3])>,
+}
+
+/// Owned behavior for a compiled native particle. Cloning a particle clones its
+/// controller state. Do not retain world references; inspect `level` each tick.
+pub trait ParticleController: Clone + Debug + Send + Sync + 'static {
+    /// Call `particle.advance_age()` for ordinary lifetime/interpolation, or
+    /// explicitly maintain those fields for an overridden source tick.
+    fn tick(&mut self, particle: &mut Particle, level: &ParticleLevel<'_>) -> ParticleUpdate;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

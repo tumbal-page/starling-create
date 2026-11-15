@@ -610,6 +610,8 @@ pub enum DamageKind {
     Wither,
     /// `wither_skull`: an owned wither skull's hit (`DamageSources.witherSkull`).
     WitherSkull,
+    /// Native mod-supplied named damage (`NamedDamage`).
+    Named(NamedDamage),
 }
 impl DamageKind {
     /// DamageTypeTags.BYPASSES_INVULNERABILITY
@@ -4645,5 +4647,31 @@ mod totem_tests {
             Some("minecraft:totem_of_undying"),
             "the totem is still in the mouth"
         );
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct NamedDamage {
+    pub name: &'static str,
+    pub tags: u32,
+}
+impl NamedDamage {
+    pub const IS_FIRE: u32 = 1 << 0;
+    pub const BYPASSES_ARMOR: u32 = 1 << 1;
+    pub const NO_KNOCKBACK: u32 = 1 << 2;
+    pub const BYPASSES_INVULNERABILITY: u32 = 1 << 3;
+    pub const BYPASSES_EFFECTS: u32 = 1 << 4;
+    pub const BYPASSES_RESISTANCE: u32 = 1 << 5;
+    pub const PANIC_CAUSES: u32 = 1 << 6;
+    pub const IS_PROJECTILE: u32 = 1 << 7;
+    pub const IS_EXPLOSION: u32 = 1 << 8;
+    pub const IS_FALL: u32 = 1 << 9;
+    pub const BYPASSES_ENCHANTMENTS: u32 = 1 << 10;
+
+    pub const fn new(name: &'static str, tags: u32) -> Self {
+        Self { name, tags }
+    }
+    pub const fn has(self, tag: u32) -> bool {
+        self.tags & tag != 0
     }
 }

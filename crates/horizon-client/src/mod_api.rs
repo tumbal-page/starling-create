@@ -282,6 +282,70 @@ pub struct NativeZoom {
     pub turn: f32,
 }
 
+/// Material policy for a native mod's terrain-model render (`native_model_render`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum NativeModelMaterial {
+    /// Use each baked quad's material; unsupported translucent/tripwire quads fail the whole call.
+    #[default]
+    Model,
+    Solid,
+    Cutout,
+    CutoutMipped,
+}
+
+/// Shade policy for a native mod's terrain-model render.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum NativeModelShade {
+    /// Respect the baked quad's directional-shading flag.
+    #[default]
+    Model,
+    Off,
+    /// The level's two entity light directions, even at full block/sky light.
+    Entity,
+}
+
+/// UV shift for a native mod's terrain-model render, applied to one named sprite.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct NativeModelUvShift<'a> {
+    pub source_sprite: &'a str,
+    pub target_sprite: &'a str,
+    pub scale: [f32; 2],
+    pub offset: [f32; 2],
+}
+
+/// Options for a native mod's terrain-model render (`native_model_render`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct NativeModelRenderOptions<'a> {
+    pub material: NativeModelMaterial,
+    pub shade: NativeModelShade,
+    pub uv_shift: Option<NativeModelUvShift<'a>>,
+    pub uv_shrink_ratio: f32,
+    pub tint: u32,
+}
+
+impl Default for NativeModelRenderOptions<'_> {
+    fn default() -> Self {
+        Self {
+            material: NativeModelMaterial::Model,
+            shade: NativeModelShade::Model,
+            uv_shift: None,
+            uv_shrink_ratio: 0.0,
+            tint: 0xff_ffff,
+        }
+    }
+}
+
+/// Controls a still-fluid box for a native mod's fluid render (`native_fluid_render`).
+/// The tint is stack ARGB, independent of biome tint.
+#[derive(Clone, Copy, Debug)]
+pub struct NativeFluidRenderOptions {
+    pub argb: Option<u32>,
+    pub render_bottom: bool,
+    pub uv_shrink_ratio: f32,
+}
+
 /// A player on the server, as a server hook sees them.
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
