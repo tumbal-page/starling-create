@@ -2,6 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // AirCurrent / FanProcessing adapter. No item components are used as entity data.
+use crate::game::GameLevel;
 use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::{containers::ModBlockEntity, items::ItemStack};
 use create_engine::{

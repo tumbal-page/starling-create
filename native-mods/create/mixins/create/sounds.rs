@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Selected AllSoundEvents composite registrations. Their wrapped event gains
 // and pitches apply on top of each call's gain and pitch.
+use crate::game::GameLevel;
 use super::Game;
 fn event(game: &mut GameLevel<'_>, pos: [i32; 3], sound: &str, volume: f32, pitch: f32) {
     let at = pos.map(|v| f64::from(v) + 0.5);

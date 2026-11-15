@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: MIT
 // MillstoneBlock/BlockEntity: processing, filtered capability, falling items,
 // empty-hand collection and original NBT. No vanilla container screen is used.
-use super::{GameLevel, native_block_entity_draw::BlockEntityDraw};
+use crate::game::GameLevel;
+use super::{native_block_entity_draw::BlockEntityDraw};
 use crate::{
     containers::{ModBlockEntity, ModContainer},
     items::ItemStack,

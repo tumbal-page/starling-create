@@ -2,6 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // BasinBlockEntity.addToGoggleTooltip. Source item and tank iteration order.
+use crate::game::GameLevel;
 use super::{
     Game,
     create_port_goggles::{indent, numeral, tr},

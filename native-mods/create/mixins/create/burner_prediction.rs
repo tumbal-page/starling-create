@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Exact-pinned adapter inside game/remote.rs. Only recognized burner actions
 // own this turn; packets use the same methods/fields as the vanilla turn.
-use super::{Game, GameLevel, Hand, S, face_direction, hand_id, play};
+use crate::game::{Game, GameLevel, Hand, S, face_direction, hand_id, play};
 use crate::game::create_port_burner_interactions as burner;
 
 pub(in crate::game) fn block(game: &mut GameLevel<'_>, hand: Hand) -> bool {

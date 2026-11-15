@@ -4,7 +4,8 @@
 // Create 6.0.10 ScrollValueRenderer, ValueBox.TextValueBox,
 // ValueBoxTransform.Sided, CreativeMotorBlockEntity.MotorValueBox, AllIcons;
 // bundled MIT Catnip Outliner/OutlineEntry. No original asset bytes.
-use super::{GameLevel, native_world_draw::NativeWorldDraw};
+use crate::game::GameLevel;
+use super::{native_world_draw::NativeWorldDraw};
 use crate::containers::BlockEntity;
 use horizon_world::nbt::Tag;
 use std::{cell::RefCell, collections::HashMap};

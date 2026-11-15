@@ -6,6 +6,7 @@
 // normal world writes, component-preserving NBT, controller lifetime and drawing.
 // Casings/dyes and passengers remain separate integrations. Processor callbacks
 // use the portable transport result/queue contract.
+use crate::game::GameLevel;
 use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::{
     containers::{BlockEntity, ModBlockEntity},

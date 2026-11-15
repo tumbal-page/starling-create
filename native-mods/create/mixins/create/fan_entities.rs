@@ -4,6 +4,7 @@
 // AirCurrent entity motion and AllFanProcessingTypes server entity effects.
 // Player force runs on its client; the server applies hazards and clears fall
 // bookkeeping. Sending an additional server impulse would apply the force twice.
+use crate::game::GameLevel;
 use super::Game;
 use crate::game::commands::Target;
 use create_engine::{

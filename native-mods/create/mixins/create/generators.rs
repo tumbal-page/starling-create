@@ -2,6 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // WaterWheelBlockEntity and LargeWaterWheelBlock's physical structural ring.
+use crate::game::GameLevel;
 use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::containers::ModBlockEntity;
 use crate::game::create_port::{integer, number};

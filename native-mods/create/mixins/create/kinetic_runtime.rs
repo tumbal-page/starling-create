@@ -5,6 +5,7 @@
 // is published by initialize/updateGeneratedRotation, not by reading a setting.
 // This preserves supported stationary-machine event ordering; it is not a
 // complete RotationPropagator implementation (source ownership/flicker/breakage).
+use crate::game::GameLevel;
 use super::Game;
 use crate::containers::{BlockEntity, ModBlockEntity, ModRevision};
 use create_engine::{

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 // IWrenchable, EncasableBlock, ManualApplicationRecipe and HandCrankBlock.
 use super::Game;
+use crate::game::GameLevel;
 use crate::{containers::BlockEntity, items::ItemStack};
 use create_engine::{kinetics::Axis, placement::Direction};
 use horizon_world::nbt::Tag;

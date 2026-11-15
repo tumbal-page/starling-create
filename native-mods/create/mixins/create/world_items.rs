@@ -2,6 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // SharedDepotBlockMethods.onLanded and MechanicalPressBlockEntity world input.
+use crate::game::GameLevel;
 use super::Game;
 use crate::{containers::ModBlockEntity, items::ItemStack};
 pub(super) fn catch(game: &mut GameLevel<'_>, pos: [i32; 3], entity: &mut ModBlockEntity) {

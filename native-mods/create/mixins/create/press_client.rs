@@ -2,6 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // PressingBehaviour's actual client read/tick boundary, Create 6.0.10.
+use crate::game::GameLevel;
 use super::{Game, create_port as port};
 use crate::{
     containers::{BlockEntity, ModBlockEntity, ModRevision},

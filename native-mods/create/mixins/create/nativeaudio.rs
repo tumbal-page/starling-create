@@ -2,6 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Client-only source SoundScapes and AirCurrentSound through SoundEngine.
+use crate::game::GameLevel;
 use super::Game;
 use create_engine::audio::{self as rules, FanSound, Group, Key, Sound, SoundScapes};
 use horizon_client_render::sound_engine::{

@@ -2,7 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // BlazeBurnerBlock / BlazeBurnerBlockEntity, pinned Create6.0.10.
-use super::{Game, GameLevel};
+use crate::game::{Game, GameLevel};
 use crate::{
     containers::{BlockEntity, ModBlockEntity},
     items::ItemStack,

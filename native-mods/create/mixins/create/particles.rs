@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Native adapters for the source RotationIndicatorParticle and AirFlowParticle.
 // Controllers retain values only; no Game or level borrow survives a callback.
+use crate::game::GameLevel;
 use super::Game;
 use crate::{
     containers::{BlockEntity, ModBlockEntity},

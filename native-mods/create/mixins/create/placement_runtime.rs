@@ -2,7 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Vanilla placement remains responsible for obstruction, permissions and consumption.
-use super::{Game, GameLevel};
+use crate::game::{Game, GameLevel};
 use crate::items::ItemStack;
 use create_engine::{
     kinetics::Axis,

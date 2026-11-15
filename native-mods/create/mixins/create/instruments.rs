@@ -1,6 +1,7 @@
 // Copyright (c) The Create Team / The Creators of Create
 // SPDX-License-Identifier: MIT
 // GaugeRenderer's visible faces, dial pivot and comparator readout.
+use crate::game::GameLevel;
 use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::containers::ModBlockEntity;
 use create_engine::{kinetics::Axis, placement::Direction};

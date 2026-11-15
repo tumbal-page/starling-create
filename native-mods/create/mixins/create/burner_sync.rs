@@ -1,6 +1,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Server-derived client fuel definitions, independent of resource-pack guesses.
+use crate::game::GameLevel;
 use super::{Game, create_port_burner_sync_protocol as wire};
 use crate::items::ItemStack;
 use create_engine::burner::Candidate;

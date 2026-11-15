@@ -4,8 +4,9 @@
 // Create 6.0.10 BasinBlockEntity/BasinInventory/BasinRenderer adapter.
 // Heat-aware, unfiltered, downward basin; two canonical water/lava tank halves.
 // Unknown tanks, filters and spouts remain unsupported; never discard them.
+use crate::game::GameLevel;
 use super::{
-    GameLevel, create_port_fluid_codec as fluids, native_block_entity_draw::BlockEntityDraw,
+    create_port_fluid_codec as fluids, native_block_entity_draw::BlockEntityDraw,
 };
 use crate::{
     containers::{BlockEntity, ModBlockEntity, ModContainer, ModRevision},

@@ -1,5 +1,6 @@
 // Pinned to the type/block/compound validation in remote_block_entity_data.
 // This runs before its ordinary NBT merge and hydrates canonical owned slots.
+use crate::game::GameLevel;
 use super::Game;
 use crate::containers::BlockEntity;
 use horizon_world::nbt::Tag;

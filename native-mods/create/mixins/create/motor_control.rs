@@ -2,6 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Authoritative KineticScrollValueBehaviour settings. Client UI lives separately.
+use crate::game::GameLevel;
 use super::Game;
 use crate::containers::BlockEntity;
 use horizon_world::nbt::Tag;
