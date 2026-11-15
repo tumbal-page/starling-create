@@ -267,7 +267,7 @@ source = "motor_value_world.rs"
 [[injection]]
 id = "motor-world-display"
 # world_canvas is pending upstream API stamping; exact source pin above applies.
-target = "horizon_client::game::native_hooks::Game<'_>::native_world_submit"
+target = "horizon_client::game::native_hooks::GameLevel<'_>::native_world_submit"
 kind = "HEAD"
 helper = "motor_world.rs"
 bindings = [
@@ -741,7 +741,7 @@ source = "fluid_codec.rs"
 
 [[injection]]
 id = "basin-custom-block-fluids"
-target = "horizon_client::game::native_hooks::Game<'_>::native_custom_block_fluids"
+target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_block_fluids"
 kind = "HEAD"
 helper = "fluid-custom_block_fluids.rs"
 bindings = [
@@ -751,7 +751,7 @@ bindings = [
 
 [[injection]]
 id = "basin-custom-fluid-tanks"
-target = "horizon_client::game::native_hooks::Game<'_>::native_custom_fluid_tanks"
+target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_fluid_tanks"
 kind = "HEAD"
 helper = "fluid-custom_fluid_tanks.rs"
 bindings = [
@@ -763,7 +763,7 @@ bindings = [
 
 [[injection]]
 id = "basin-custom-fluid-fill"
-target = "horizon_client::game::native_hooks::Game<'_>::native_custom_fluid_fill"
+target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_fluid_fill"
 kind = "HEAD"
 helper = "fluid-custom_fluid_fill.rs"
 bindings = [
@@ -777,7 +777,7 @@ bindings = [
 
 [[injection]]
 id = "basin-custom-fluid-drain"
-target = "horizon_client::game::native_hooks::Game<'_>::native_custom_fluid_drain"
+target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_fluid_drain"
 kind = "HEAD"
 helper = "fluid-custom_fluid_drain.rs"
 bindings = [
@@ -802,17 +802,8 @@ name = "create_port_burner_presentation"
 source = "burner_presentation.rs"
 
 [[injection]]
-id = "burner-standalone-sprites"
-target = "horizon_client::game::native_hooks::Game<'_>::native_terrain_model_sprites"
-kind = "HEAD"
-helper = "burner_sprites.rs"
-bindings = [
- {name="sprites",ty="&mut Vec<String>",value="&mut *sprites"},
-]
-
-[[injection]]
 id = "burner-stateful-entity"
-target = "horizon_client::game::native_hooks::Game<'_>::native_stateful_block_entity"
+target = "horizon_client::game::native_hooks::GameLevel<'_>::native_stateful_block_entity"
 kind = "HEAD"
 helper = "burner_stateful.rs"
 bindings = [
@@ -861,7 +852,7 @@ source="burner_prediction.rs"
 
 [[injection]]
 id="burner-server-entity"
-target="horizon_client::game::native_hooks::Game<'_>::native_item_interact_mob"
+target="horizon_client::game::native_hooks::GameLevel<'_>::native_item_interact_mob"
 kind="HEAD"
 helper="burner_interact_entity.rs"
 bindings=[
@@ -917,7 +908,7 @@ bindings=[{name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"}]
 
 [[injection]]
 id = "burner-clone-item"
-target = "horizon_client::game::native_hooks::Game<'_>::native_block_clone_item"
+target = "horizon_client::game::native_hooks::GameLevel<'_>::native_block_clone_item"
 kind = "HEAD"
 helper = "burner_clone_item.rs"
 bindings = [
@@ -1025,7 +1016,7 @@ source = "item_contact.rs"
 
 [[injection]]
 id = "item-after-vertical-collision"
-target = "horizon_client::game::native_hooks::Game<'_>::native_item_after_vertical_collision"
+target = "horizon_client::game::native_hooks::GameLevel<'_>::native_item_after_vertical_collision"
 kind = "HEAD"
 helper = "item_after_vertical_collision.rs"
 bindings = [
