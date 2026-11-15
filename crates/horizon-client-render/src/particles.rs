@@ -20,6 +20,7 @@ use horizon_core::{
 use horizon_world::block_collision::BlockCollisionRegistry;
 use std::{
     collections::{HashMap, HashSet},
+    fmt::Debug,
     path::Path,
 };
 
@@ -4453,7 +4454,7 @@ pub struct ParticleUpdate {
 
 /// Owned behavior for a compiled native particle. Cloning a particle clones its
 /// controller state. Do not retain world references; inspect `level` each tick.
-pub trait ParticleController: Clone + Debug + Send + Sync + 'static {
+pub trait ParticleController: Clone + fmt::Debug + Send + Sync + 'static {
     /// Call `particle.advance_age()` for ordinary lifetime/interpolation, or
     /// explicitly maintain those fields for an overridden source tick.
     fn tick(&mut self, particle: &mut Particle, level: &ParticleLevel<'_>) -> ParticleUpdate;
