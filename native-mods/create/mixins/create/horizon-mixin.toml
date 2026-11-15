@@ -92,10 +92,13 @@ bindings = [{ name = "root", ty = "&mut std::path::PathBuf", value = "&mut root"
 [[injection]]
 id = "local-assets-reload"
 target = "horizon_client::game::packs::stage_pack"
-kind = "HEAD"
+kind = "ModifyExpressionValue"
+selector = "startup_root"
+ordinal = 0
+require = 1
 helper = "assets_root.rs"
 bindings = [
-  { name = "root", ty = "std::path::PathBuf", value = "$value" },
+  { name = "result", ty = "std::io::Result<std::path::PathBuf>", value = "$value" },
 ]
 
 [[injection]]
