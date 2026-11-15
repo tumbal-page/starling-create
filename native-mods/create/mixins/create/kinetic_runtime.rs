@@ -92,7 +92,7 @@ thread_local! {
     static LIFETIMES: RefCell<SessionCache<Lifetimes>> = RefCell::new(SessionCache::default());
 }
 fn with_lifetime<R>(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: Pos,
     entity: &ModBlockEntity,
     action: impl FnOnce(&mut Lifetime) -> R,
@@ -125,12 +125,12 @@ fn theoretical(entity: &ModBlockEntity) -> f32 {
         _ => super::create_port::number(&entity.nbt, "Speed"),
     }
 }
-fn generation(game: &Game<'_>, pos: Pos, entity: &ModBlockEntity) -> f32 {
+fn generation(game: &GameLevel<'_>, pos: Pos, entity: &ModBlockEntity) -> f32 {
     with_lifetime(game, pos, entity, |state| {
         *state.generation.get_or_insert_with(|| theoretical(entity))
     })
 }
-fn published_node(game: &Game<'_>, mut node: Node) -> Node {
+fn published_node(game: &GameLevel<'_>, mut node: Node) -> Node {
     if let Some(BlockEntity::Mod(entity)) =
         game.world
             .block_entities
@@ -145,7 +145,7 @@ fn published_node(game: &Game<'_>, mut node: Node) -> Node {
 /// CreativeMotor.initialize publishes its setting. Other generators require
 /// their own real turn/expiry/flow callback even on their first BE turn. Reading ScrollValue via /data is not that event.
 pub(super) fn source_turn(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: Pos,
     entity: &ModBlockEntity,
     requested: f32,
@@ -165,7 +165,7 @@ pub(super) fn source_turn(
 /// rotation. A distant loaded motor behind an unticked shaft is not a shortcut.
 /// Synchronous propagation may already have supplied this node before its turn.
 pub(super) fn attach(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     node: Node,
     entity: &ModBlockEntity,
     potential: f32,
@@ -224,7 +224,7 @@ pub(super) fn attach(
     });
     (first, true)
 }
-pub(super) fn network(game: &Game<'_>, start: Node, half: u8) -> Rc<Network> {
+pub(super) fn network(game: &GameLevel<'_>, start: Node, half: u8) -> Rc<Network> {
     let start = published_node(game, start);
     CACHE.with(|cell| {
         let mut cache = cell.borrow_mut();
@@ -255,7 +255,7 @@ pub(super) fn network(game: &Game<'_>, start: Node, half: u8) -> Rc<Network> {
 }
 /// updateGeneratedRotation/attachKinetics publishes to neighbours immediately,
 /// including machines whose behaviour turn already ran in this level pass.
-pub(super) fn publish(game: &mut Game<'_>, network: &Network, current: Pos) {
+pub(super) fn publish(game: &mut GameLevel<'_>, network: &Network, current: Pos) {
     // A propagated source already visits every neighbour. Their subsequent
     // first own turns must not repeat that full-component scan (N squared).
     // Each source event invalidates both the solved graph and this guard.
@@ -296,7 +296,7 @@ pub(super) fn publish(game: &mut Game<'_>, network: &Network, current: Pos) {
 }
 /// Successful generator wrench rotation, distinct from raw state/NBT reads.
 /// switchToBlockState marks it now; Generating.tick applies it next own turn.
-pub(super) fn wrenched(game: &Game<'_>, pos: Pos) {
+pub(super) fn wrenched(game: &GameLevel<'_>, pos: Pos) {
     if let Some(BlockEntity::Mod(entity)) = game.world.block_entities.get(&(pos[0], pos[1], pos[2]))
         && !entity.id.is_empty()
     {
@@ -304,7 +304,7 @@ pub(super) fn wrenched(game: &Game<'_>, pos: Pos) {
     }
 }
 /// Ordinary source-setting callback while the source BE is in the world.
-pub(super) fn generated_changed(game: &mut Game<'_>, pos: Pos) {
+pub(super) fn generated_changed(game: &mut GameLevel<'_>, pos: Pos) {
     let Some(mut node) = super::create_port::node(game, pos) else {
         return;
     };
@@ -352,7 +352,7 @@ pub(super) fn changed(dimension: &str, pos: Pos) {
 /// Clutch/Gearshift reopening is a scheduled block tick before the BE pass.
 /// This preserves that next-tick machine boundary. It does not claim immediate
 /// between-tick neighbour callback parity: the current hook has no Game owner.
-pub(super) fn refresh_transmissions(game: &mut Game<'_>) {
+pub(super) fn refresh_transmissions(game: &mut GameLevel<'_>) {
     LIFETIMES.with(|cell| {
         cell.borrow_mut().dimension(std::ptr::from_ref(&game.world) as usize, game.dim.id())
             .maintain(game.world.game_time, |pos, owner| {

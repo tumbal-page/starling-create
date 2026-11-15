@@ -27,7 +27,7 @@ fn direction(d: D) -> Direction {
         D::East => Direction::East,
     }
 }
-fn ports(game: &Game<'_>, pos: [i32; 3]) -> [bool; 6] {
+fn ports(game: &GameLevel<'_>, pos: [i32; 3]) -> [bool; 6] {
     Direction::ALL.map(|d| {
         let delta = d.vector();
         super::create_port::node(game, std::array::from_fn(|i| pos[i] + delta[i]))
@@ -174,7 +174,7 @@ pub(super) fn state(
     *answer = Some(Some(state));
 }
 
-pub(super) fn alias(game: &mut Game<'_>, stack: &ItemStack, pos: [i32; 3], face: [i32; 3]) -> bool {
+pub(super) fn alias(game: &mut GameLevel<'_>, stack: &ItemStack, pos: [i32; 3], face: [i32; 3]) -> bool {
     if !game.native_on("create")
         || !matches!(
             stack.item.as_ref(),
@@ -271,7 +271,7 @@ pub(super) fn alias(game: &mut Game<'_>, stack: &ItemStack, pos: [i32; 3], face:
     true
 }
 
-pub(super) fn destroy(game: &mut Game<'_>, pos: [i32; 3], canceled: &mut bool) {
+pub(super) fn destroy(game: &mut GameLevel<'_>, pos: [i32; 3], canceled: &mut bool) {
     if !game.native_on("create") {
         return;
     }

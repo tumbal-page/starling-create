@@ -44,7 +44,7 @@ struct World {
 thread_local! {
     static WORLDS: RefCell<SessionCache<World>> = RefCell::new(SessionCache::default());
 }
-fn with_world<R>(game: &Game<'_>, action: impl FnOnce(&mut World) -> R) -> R {
+fn with_world<R>(game: &GameLevel<'_>, action: impl FnOnce(&mut World) -> R) -> R {
     WORLDS.with(|cache| {
         action(
             cache
@@ -60,7 +60,7 @@ pub(super) fn reset(reload: bool) {
         WORLDS.with(|cache| cache.borrow_mut().clear());
     }
 }
-pub(super) fn maintenance(game: &mut Game<'_>) {
+pub(super) fn maintenance(game: &mut GameLevel<'_>) {
     with_world(game, |world| {
         if world.maintenance == Some(game.world.game_time) {
             return;
@@ -82,7 +82,7 @@ pub(super) fn initialize(entity: &mut ModBlockEntity) {
         .entry("NeedsUpdate".into())
         .or_insert(Tag::Byte(0));
 }
-pub(super) fn schedule(game: &mut Game<'_>, pos: Pos) {
+pub(super) fn schedule(game: &mut GameLevel<'_>, pos: Pos) {
     if game.native_block(pos) != ID {
         return;
     }
@@ -100,7 +100,7 @@ pub(super) fn on_speed_changed(entity: &mut ModBlockEntity, previous: f32, curre
         entity.nbt.insert("NeedsUpdate".into(), Tag::Byte(1));
     }
 }
-pub(super) fn basin_removed(game: &mut Game<'_>, pos: Pos) {
+pub(super) fn basin_removed(game: &mut GameLevel<'_>, pos: Pos) {
     if game.native_block(pos) == ID {
         with_world(game, |w| w.running.entry(pos).or_default().removed = true);
     }
@@ -111,7 +111,7 @@ fn saved(entity: &ModBlockEntity) -> (bool, i32) {
         super::create_port::integer(&entity.nbt, "Ticks"),
     )
 }
-fn choose(game: &mut Game<'_>, pos: Pos, state: &mut basin::Basin) -> Option<Arc<Recipe>> {
+fn choose(game: &mut GameLevel<'_>, pos: Pos, state: &mut basin::Basin) -> Option<Arc<Recipe>> {
     super::create_port_basin_recipes::choose(
         game,
         pos,
@@ -119,11 +119,11 @@ fn choose(game: &mut Game<'_>, pos: Pos, state: &mut basin::Basin) -> Option<Arc
         super::create_port_basin_recipes::Operator::Mixing,
     )
 }
-fn apply(game: &mut Game<'_>, pos: Pos, recipe: Option<&Recipe>) -> bool {
+fn apply(game: &mut GameLevel<'_>, pos: Pos, recipe: Option<&Recipe>) -> bool {
     super::create_port_basin_recipes::apply(game, pos, recipe)
 }
 /// Runs once after the kinetic graph has resolved this mixer's actual RPM.
-pub(super) fn tick(game: &mut Game<'_>, pos: Pos, entity: &mut ModBlockEntity, rpm: f32) -> bool {
+pub(super) fn tick(game: &mut GameLevel<'_>, pos: Pos, entity: &mut ModBlockEntity, rpm: f32) -> bool {
     if entity.id != ID {
         return false;
     }
@@ -270,7 +270,7 @@ pub(super) fn bounds(entity: &ModBlockEntity, bounds: &mut [f32; 6]) {
     }
 }
 pub(super) fn draw(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: Pos,
     entity: &ModBlockEntity,
     draw: &mut BlockEntityDraw,
@@ -326,7 +326,7 @@ pub(super) fn draw(
     draw.pop();
     true
 }
-pub(super) fn client_tick(game: &mut Game<'_>) {
+pub(super) fn client_tick(game: &mut GameLevel<'_>) {
     if !game.native_window() || game.remote.is_none() || !game.native_on("create") {
         return;
     }

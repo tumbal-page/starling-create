@@ -75,7 +75,7 @@ pub(super) fn reset() {
 /// This is the pinned HEAD fallback for the exact accepted receipt. Official
 /// RETURN planning rejects this function's closure/try control flow. Both a
 /// block update and initial chunk tags pass through this one entry point.
-pub(super) fn packet(game: &mut Game<'_>, pos: Pos, kind: i32, tag: &Tag) {
+pub(super) fn packet(game: &mut GameLevel<'_>, pos: Pos, kind: i32, tag: &Tag) {
     if !game.native_window() || !game.native_on("create") {
         return;
     }
@@ -141,7 +141,7 @@ pub(super) fn packet(game: &mut Game<'_>, pos: Pos, kind: i32, tag: &Tag) {
 /// Only call from the actual client Level.tickBlockEntities boundary. The
 /// existing tick_block_entity_anims HEAD runs inside clock.world_runs(),
 /// unlike native_tick, which also runs during freeze and loading screens.
-pub(super) fn tick(game: &mut Game<'_>) {
+pub(super) fn tick(game: &mut GameLevel<'_>) {
     if !game.native_window() || game.remote.is_none() || !game.native_on("create") {
         return;
     }
@@ -197,7 +197,7 @@ pub(super) fn tick(game: &mut Game<'_>) {
 
 /// Actual source prev/current interpolation, with a scalar-only cold fallback.
 /// Saved ParticleItems are never polled or replayed by drawing or ticking.
-pub(super) fn travel(game: &Game<'_>, pos: Pos, entity: &ModBlockEntity, partial: f32) -> f32 {
+pub(super) fn travel(game: &GameLevel<'_>, pos: Pos, entity: &ModBlockEntity, partial: f32) -> f32 {
     CLIENTS.with(|cache| {
         let mut cache = cache.borrow_mut();
         let world = cache.dimension(std::ptr::from_ref(&game.world) as usize, game.dim.id());

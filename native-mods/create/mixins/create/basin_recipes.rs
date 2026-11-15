@@ -50,7 +50,7 @@ struct Recipes {
     compiled: Vec<Arc<Recipe>>,
 }
 
-fn compile(game: &Game<'_>, id: &str, json: &serde_json::Value) -> Option<Recipe> {
+fn compile(game: &GameLevel<'_>, id: &str, json: &serde_json::Value) -> Option<Recipe> {
     // Strict bounded codecs: no unknown ingredient fields can be dropped to
     // turn an unsupported predicate into a simpler item/fluid match.
     let heat = match json.get("heat_requirement") {
@@ -194,7 +194,7 @@ pub(super) fn reset(reload: bool) {
     }
 }
 fn with_recipes<R>(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     operator: Operator,
     action: impl FnOnce(&mut Recipes) -> R,
 ) -> R {
@@ -214,7 +214,7 @@ fn can_compress(ingredients: &[Ingredient]) -> bool {
     matches!(ingredients.len(), 4 | 9)
         && ingredients.iter().all(|i| i.order == ingredients[0].order)
 }
-fn recipes(game: &Game<'_>, operator: Operator) -> Vec<Arc<Recipe>> {
+fn recipes(game: &GameLevel<'_>, operator: Operator) -> Vec<Arc<Recipe>> {
     with_recipes(game, operator, |cache| {
         let custom = game.native_recipes_of_type(operator.recipe_type());
         let table = game.recipes();
@@ -335,7 +335,7 @@ impl rules::Context<basin::Key, fluids::Key> for Context<'_, '_> {
     }
 }
 pub(super) fn matching(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     basin: &mut basin::Basin,
     recipe: &Recipe,
@@ -357,7 +357,7 @@ pub(super) fn matching(
         .success()
 }
 pub(super) fn choose(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     basin: &mut basin::Basin,
     operator: Operator,
@@ -401,7 +401,7 @@ pub(super) fn choose(
     found.sort_by_key(|r| std::cmp::Reverse(r.inputs.len()));
     found.into_iter().next()
 }
-pub(super) fn apply(game: &mut Game<'_>, pos: Pos, recipe: Option<&Recipe>) -> bool {
+pub(super) fn apply(game: &mut GameLevel<'_>, pos: Pos, recipe: Option<&Recipe>) -> bool {
     let Some(recipe) = recipe else {
         return false;
     };

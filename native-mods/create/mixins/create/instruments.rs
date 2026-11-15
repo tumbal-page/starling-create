@@ -5,19 +5,19 @@ use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::containers::ModBlockEntity;
 use create_engine::{kinetics::Axis, placement::Direction};
 thread_local! {static DIRTY:std::cell::RefCell<std::collections::BTreeSet<(String,[i32;3])>>=const{std::cell::RefCell::new(std::collections::BTreeSet::new())};}
-pub(super) fn changed(game: &Game<'_>, pos: [i32; 3]) {
+pub(super) fn changed(game: &GameLevel<'_>, pos: [i32; 3]) {
     DIRTY.with(|d| {
         d.borrow_mut().insert((game.dim.id().to_owned(), pos));
     });
 }
-pub(super) fn flush(game: &mut Game<'_>) {
+pub(super) fn flush(game: &mut GameLevel<'_>) {
     let entries = DIRTY.with(|d| std::mem::take(&mut *d.borrow_mut()));
     for (dim, p) in entries {
         game.native_update_output_neighbors(&dim, p);
     }
 }
 pub(super) fn draw(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: [i32; 3],
     _: &ModBlockEntity,
     draw: &mut BlockEntityDraw,

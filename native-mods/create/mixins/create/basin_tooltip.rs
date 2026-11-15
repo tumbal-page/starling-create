@@ -28,7 +28,7 @@ fn inventory(nbt: &Compound, key: &str) -> [Option<ItemStack>; 9] {
     }
     slots
 }
-pub(super) fn lines(game: &Game<'_>, nbt: &Compound) -> Vec<Text> {
+pub(super) fn lines(game: &GameLevel<'_>, nbt: &Compound) -> Vec<Text> {
     let mut lines = vec![indent(game, tr("gui.goggles.basin_contents"), 0)];
     // CombinedInvWrapper(inputInventory, outputInventory).
     for key in ["InputItems", "OutputItems"] {

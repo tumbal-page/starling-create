@@ -5,7 +5,7 @@
 // Heat-aware, unfiltered, downward basin; two canonical water/lava tank halves.
 // Unknown tanks, filters and spouts remain unsupported; never discard them.
 use super::{
-    Game, GameLevel, create_port_fluid_codec as fluids, native_block_entity_draw::BlockEntityDraw,
+    GameLevel, create_port_fluid_codec as fluids, native_block_entity_draw::BlockEntityDraw,
 };
 use crate::{
     containers::{BlockEntity, ModBlockEntity, ModContainer, ModRevision},
@@ -90,7 +90,7 @@ pub(super) fn reset(reload: bool) {
 
 /// BasinInventory.whenContentsChanged/notifyChangeOfContents only raises a
 /// flag. The next ordinary Basin tick schedules its operator checker.
-pub(super) fn notify_contents(game: &Game<'_>, pos: Pos) {
+pub(super) fn notify_contents(game: &GameLevel<'_>, pos: Pos) {
     let Some(BlockEntity::Mod(entity)) = game.world.block_entities.get(&(pos[0], pos[1], pos[2]))
     else {
         return;
@@ -223,7 +223,7 @@ fn nonempty(tag: Option<&Tag>) -> bool {
     }
 }
 pub(super) fn unsupported(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: Pos,
     entity: &ModBlockEntity,
 ) -> Option<&'static str> {
@@ -257,7 +257,7 @@ pub(super) fn unsupported(
 fn component_maximum(stack: &ItemStack) -> Option<u32> {
     super::create_port::stack_maximum_override(stack)
 }
-pub(super) fn max_stack(game: &Game<'_>, stack: &ItemStack) -> u32 {
+pub(super) fn max_stack(game: &GameLevel<'_>, stack: &ItemStack) -> u32 {
     super::create_port::stack_maximum(game, stack)
 }
 pub(super) fn has_analog(
@@ -318,7 +318,7 @@ pub(super) fn can_survive(
         !matches!(game.world.block_entities.get(&(pos.x,pos.y+1,pos.z)),Some(BlockEntity::Mod(e)) if matches!(e.id.as_str(),"create:mechanical_mixer"|"create:mechanical_press")),
     );
 }
-pub(super) fn core_stack(game: &Game<'_>, stack: &ItemStack) -> rules::Item<Key> {
+pub(super) fn core_stack(game: &GameLevel<'_>, stack: &ItemStack) -> rules::Item<Key> {
     let mut key = stack.clone();
     key.count = 1;
     rules::Item {
@@ -333,7 +333,7 @@ pub(super) fn native_stack(item: &rules::Item<Key>) -> ItemStack {
         ..item.key.0.clone()
     }
 }
-pub(super) fn read(game: &Game<'_>, pos: Pos) -> Option<Basin> {
+pub(super) fn read(game: &GameLevel<'_>, pos: Pos) -> Option<Basin> {
     let BlockEntity::Mod(entity) = game.world.block_entities.get(&(pos[0], pos[1], pos[2]))? else {
         return None;
     };
@@ -362,7 +362,7 @@ pub(super) fn read(game: &Game<'_>, pos: Pos) -> Option<Basin> {
         ..Basin::default()
     })
 }
-pub(super) fn heat(game: &Game<'_>, pos: Pos) -> rules::Heat {
+pub(super) fn heat(game: &GameLevel<'_>, pos: Pos) -> rules::Heat {
     let Some(BlockEntity::Mod(entity)) = game.world.block_entities.get(&(pos[0], pos[1], pos[2]))
     else {
         return rules::Heat::None;
@@ -409,7 +409,7 @@ pub(super) fn heat(game: &Game<'_>, pos: Pos) -> rules::Heat {
         })
     })
 }
-pub(super) fn write(game: &mut Game<'_>, pos: Pos, basin: &Basin) -> bool {
+pub(super) fn write(game: &mut GameLevel<'_>, pos: Pos, basin: &Basin) -> bool {
     let Some(changed) = game.native_with_mod_block_entity(pos, |entity| {
         if entity.id != ID || !crate::game::create_port::inventory_supported(entity) {
             return false;
@@ -468,7 +468,7 @@ fn set_tanks(entity: &mut ModBlockEntity, input: Tag, output: Tag) -> bool {
     }
     changed
 }
-fn fluid_state(game: &Game<'_>, pos: Pos) -> Option<Basin> {
+fn fluid_state(game: &GameLevel<'_>, pos: Pos) -> Option<Basin> {
     let BlockEntity::Mod(entity) = game.world.block_entities.get(&(pos[0], pos[1], pos[2]))? else {
         return None;
     };
@@ -481,7 +481,7 @@ fn fluid_state(game: &Game<'_>, pos: Pos) -> Option<Basin> {
         ..Basin::default()
     })
 }
-fn commit_fluids(game: &mut Game<'_>, pos: Pos, state: &Basin) {
+fn commit_fluids(game: &mut GameLevel<'_>, pos: Pos, state: &Basin) {
     let changed = game
         .native_with_mod_block_entity(pos, |entity| {
             if entity.id != ID || !crate::game::create_port::inventory_supported(entity) {
@@ -523,7 +523,7 @@ pub(super) fn custom_fluids(block: &str, custom: &mut bool) {
     }
 }
 pub(super) fn fluid_tanks(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: Pos,
     _side: Option<horizon_core::geometry::Direction>,
     out: &mut Option<Vec<NativeFluidTankView>>,
@@ -544,7 +544,7 @@ pub(super) fn fluid_tanks(
     );
 }
 pub(super) fn fluid_fill(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     _side: Option<horizon_core::geometry::Direction>,
     resource: &NativeFluidStack,
@@ -572,7 +572,7 @@ pub(super) fn fluid_fill(
     *out = Some(amount as i32);
 }
 pub(super) fn fluid_drain(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     _side: Option<horizon_core::geometry::Direction>,
     request: &NativeFluidDrain,
@@ -638,7 +638,7 @@ pub(super) fn can_place(
     }
 }
 
-pub(super) fn tick(game: &mut Game<'_>, pos: Pos, entity: &mut ModBlockEntity) -> bool {
+pub(super) fn tick(game: &mut GameLevel<'_>, pos: Pos, entity: &mut ModBlockEntity) -> bool {
     if entity.id != ID || !crate::game::create_port::inventory_supported(entity) {
         return false;
     }
@@ -738,7 +738,7 @@ pub(super) fn tick(game: &mut Game<'_>, pos: Pos, entity: &mut ModBlockEntity) -
     // collision API; no guessed contact height or direct teleport is used.
     changed
 }
-pub(super) fn reacts(game: &Game<'_>, pos: Pos) -> bool {
+pub(super) fn reacts(game: &GameLevel<'_>, pos: Pos) -> bool {
     game.native_on("create")
         && game.native_block(pos) == ID
         && game.held().is_none_or(|s| {
@@ -753,7 +753,7 @@ pub(super) fn reacts(game: &Game<'_>, pos: Pos) -> bool {
                 )
         })
 }
-fn give_container(game: &mut Game<'_>, pos: Pos, stack: ItemStack) {
+fn give_container(game: &mut GameLevel<'_>, pos: Pos, stack: ItemStack) {
     let player = game.native_acting_id();
     if let Some(rest) = game.native_give_stack(player, stack) {
         if let Some(eye) = game.eye_position() {
@@ -763,7 +763,7 @@ fn give_container(game: &mut Game<'_>, pos: Pos, stack: ItemStack) {
         }
     }
 }
-fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
+fn bucket_click(game: &mut GameLevel<'_>, pos: Pos, held: &ItemStack) -> bool {
     let dim = game.dim.id().to_owned();
     match held.item.as_ref() {
         "minecraft:water_bucket" | "minecraft:lava_bucket" => {
@@ -841,7 +841,7 @@ fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
         _ => false,
     }
 }
-pub(super) fn right_click(game: &mut Game<'_>, pos: Pos) -> bool {
+pub(super) fn right_click(game: &mut GameLevel<'_>, pos: Pos) -> bool {
     if crate::game::create_port::inventory_blocked(game, pos) {
         return true;
     }
@@ -896,7 +896,7 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: Pos) -> bool {
     true
 }
 
-pub(super) fn removed(game: &mut Game<'_>, pos: Pos) {
+pub(super) fn removed(game: &mut GameLevel<'_>, pos: Pos) {
     SERVER.with(|cache| {
         cache
             .borrow_mut()
@@ -906,7 +906,7 @@ pub(super) fn removed(game: &mut Game<'_>, pos: Pos) {
     crate::game::create_port_mixer::basin_removed(game, [pos[0], pos[1] + 2, pos[2]]);
     crate::game::create_port_press_basin::basin_removed(game, [pos[0], pos[1] + 2, pos[2]]);
 }
-pub(super) fn maintenance(game: &mut Game<'_>) {
+pub(super) fn maintenance(game: &mut GameLevel<'_>) {
     SERVER.with(|cache| {
         cache
             .borrow_mut()
@@ -914,7 +914,7 @@ pub(super) fn maintenance(game: &mut Game<'_>) {
             .retain(|p, _| game.world.loaded(p[0], p[2]) && game.native_block(*p) == ID);
     });
 }
-pub(super) fn client_tick(game: &mut Game<'_>) {
+pub(super) fn client_tick(game: &mut GameLevel<'_>) {
     if !game.native_window() || game.remote.is_none() || !game.native_on("create") {
         return;
     }
@@ -977,7 +977,7 @@ pub(super) fn client_tick(game: &mut Game<'_>) {
     });
 }
 fn draw_fluids(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: Pos,
     entity: &ModBlockEntity,
     draw: &mut BlockEntityDraw,
@@ -1033,7 +1033,7 @@ fn draw_fluids(
     height
 }
 pub(super) fn draw(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: Pos,
     entity: &ModBlockEntity,
     draw: &mut BlockEntityDraw,

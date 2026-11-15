@@ -1,5 +1,5 @@
 fn motor_scroll(
-    game: &crate::game::Game<'_>,
+    game: &crate::game::GameLevel<'_>,
     screen: &crate::mod_api::NativeScreenView<'_>,
     scroll: [f64; 2],
     modifiers: u32,

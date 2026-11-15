@@ -36,7 +36,7 @@ struct Prediction {
     pos: [i32; 3],
 }
 thread_local! {static PREDICTIONS:RefCell<Vec<Prediction>>=const{RefCell::new(Vec::new())};}
-pub(super) fn unload(game: &mut Game<'_>) {
+pub(super) fn unload(game: &mut GameLevel<'_>) {
     CLIENT.with(|c| {
         let mut cache = c.borrow_mut();
         if cache.game == std::ptr::from_ref(game) as usize {
@@ -46,10 +46,10 @@ pub(super) fn unload(game: &mut Game<'_>) {
     });
     PREDICTIONS.with(|p| p.borrow_mut().clear());
 }
-fn client(game: &Game<'_>) -> bool {
+fn client(game: &GameLevel<'_>) -> bool {
     game.native_window() && game.remote.is_some() && game.native_on("create")
 }
-fn camera(game: &Game<'_>) -> Option<[f64; 3]> {
+fn camera(game: &GameLevel<'_>) -> Option<[f64; 3]> {
     game.camera_mob()
         .map(|m| [m.position.x, m.position.y, m.position.z])
         .or_else(|| {
@@ -58,7 +58,7 @@ fn camera(game: &Game<'_>) -> Option<[f64; 3]> {
                 .map(|p| [p.position.x, p.position.y, p.position.z])
         })
 }
-fn stop(game: &mut Game<'_>, cache: &mut Client) {
+fn stop(game: &mut GameLevel<'_>, cache: &mut Client) {
     for (_, id) in std::mem::take(&mut cache.continuous) {
         game.audio.stop_and_release(id);
     }
@@ -66,7 +66,7 @@ fn stop(game: &mut Game<'_>, cache: &mut Client) {
         game.audio.stop_and_release(id);
     }
 }
-fn prepare(game: &mut Game<'_>, cache: &mut Client) {
+fn prepare(game: &mut GameLevel<'_>, cache: &mut Client) {
     let id = std::ptr::from_ref(game) as usize;
     let world = std::ptr::from_ref(&game.world) as usize;
     if cache.game == id
@@ -118,7 +118,7 @@ fn instance(sound: &Sound) -> SoundInstance {
     instance
 }
 fn play_local(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     event: &str,
     source: usize,
     position: [f64; 3],
@@ -145,7 +145,7 @@ fn play_local(
         game.audio.play_instance(instance, false);
     }
 }
-pub(super) fn crank_packet(game: &mut Game<'_>, pos: [i32; 3], kind: i32, tag: &Tag) {
+pub(super) fn crank_packet(game: &mut GameLevel<'_>, pos: [i32; 3], kind: i32, tag: &Tag) {
     if !client(game) {
         return;
     }
@@ -188,7 +188,7 @@ pub(super) fn crank_packet(game: &mut Game<'_>, pos: [i32; 3], kind: i32, tag: &
             .in_use = in_use;
     });
 }
-pub(super) fn predict_crank(game: &Game<'_>, pos: [i32; 3]) {
+pub(super) fn predict_crank(game: &GameLevel<'_>, pos: [i32; 3]) {
     if !client(game) || game.native_block(pos) != "create:hand_crank" {
         return;
     }
@@ -225,7 +225,7 @@ pub(super) fn predict_crank(game: &Game<'_>, pos: [i32; 3]) {
         }
     });
 }
-fn update_fan(game: &mut Game<'_>, cache: &mut Client) {
+fn update_fan(game: &mut GameLevel<'_>, cache: &mut Client) {
     if cache.fan.stopped {
         if let Some(id) = cache.fan_handle.take() {
             game.audio.stop_and_release(id);
@@ -240,7 +240,7 @@ fn update_fan(game: &mut Game<'_>, cache: &mut Client) {
 }
 
 /// Before fan client forces, as AirCurrent.Client.tickClientPlayerSounds.
-pub(super) fn begin_tick(game: &mut Game<'_>) {
+pub(super) fn begin_tick(game: &mut GameLevel<'_>) {
     if !client(game) || game.pause {
         return;
     }
@@ -272,7 +272,7 @@ pub(super) fn begin_tick(game: &mut Game<'_>) {
 
 /// Call immediately after applying the local player's current force. Source
 /// enableClientPlayerSound ignores players while spectating another entity.
-pub(super) fn enable_fan(game: &mut Game<'_>, rpm: f32, velocity: [f64; 3]) {
+pub(super) fn enable_fan(game: &mut GameLevel<'_>, rpm: f32, velocity: [f64; 3]) {
     if !client(game) || !game.controls_camera() {
         return;
     }
@@ -305,7 +305,7 @@ pub(super) fn enable_fan(game: &mut Game<'_>, rpm: f32, velocity: [f64; 3]) {
 }
 
 /// Reuse the presentation block traversal; no additional scan or retained NBT.
-pub(super) fn block(game: &mut Game<'_>, pos: [i32; 3], block: &str, nbt: &Compound, rpm: f32) {
+pub(super) fn block(game: &mut GameLevel<'_>, pos: [i32; 3], block: &str, nbt: &Compound, rpm: f32) {
     if !client(game) || game.pause || game.clock.frozen() {
         return;
     }
@@ -391,7 +391,7 @@ pub(super) fn block(game: &mut Game<'_>, pos: [i32; 3], block: &str, nbt: &Compo
 }
 
 /// After registering this tick's block audio, as SoundScapes.tick.
-pub(super) fn end_tick(game: &mut Game<'_>) {
+pub(super) fn end_tick(game: &mut GameLevel<'_>) {
     if !client(game) || game.pause {
         return;
     }

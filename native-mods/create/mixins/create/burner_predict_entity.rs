@@ -1,5 +1,5 @@
 fn create_burner_predict_entity(
-    game: &mut crate::game::Game<'_>,
+    game: &mut crate::game::GameLevel<'_>,
     hand: crate::game::Hand,
 ) -> std::ops::ControlFlow<bool> {
     if game.create_burner_predict_entity(hand) {

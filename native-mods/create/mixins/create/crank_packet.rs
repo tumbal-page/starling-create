@@ -1,7 +1,7 @@
 // API 359 has no client block-entity tag receipt hook. This narrow raw adapter
 // is pinned to Game::remote_block_entity_data's type/block/tag validation.
 fn create_crank_packet(
-    game: &mut crate::game::Game<'_>,
+    game: &mut crate::game::GameLevel<'_>,
     pos: [i32; 3],
     kind: i32,
     tag: &horizon_world::nbt::Tag,

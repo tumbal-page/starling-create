@@ -7,10 +7,10 @@ use crate::{containers::BlockEntity, items::ItemStack};
 use create_engine::{kinetics::Axis, placement::Direction};
 use horizon_world::nbt::Tag;
 
-fn secondary(game: &Game<'_>) -> bool {
+fn secondary(game: &GameLevel<'_>) -> bool {
     game.keys.contains(&winit::keyboard::KeyCode::ShiftLeft)
 }
-fn bypass(game: &Game<'_>) -> bool {
+fn bypass(game: &GameLevel<'_>) -> bool {
     secondary(game)
         && (game
             .inventory
@@ -18,7 +18,7 @@ fn bypass(game: &Game<'_>) -> bool {
             .is_some_and(Option::is_some)
             || game.offhand.is_some())
 }
-fn manual(game: &Game<'_>, pos: [i32; 3]) -> Option<(String, bool)> {
+fn manual(game: &GameLevel<'_>, pos: [i32; 3]) -> Option<(String, bool)> {
     let held = game.held()?;
     let block = game.native_block(pos);
     let block_stack = ItemStack::new(block.as_str(), 1);
@@ -46,7 +46,7 @@ fn manual(game: &Game<'_>, pos: [i32; 3]) -> Option<(String, bool)> {
     }
     None
 }
-pub(super) fn reacts(game: &Game<'_>, pos: [i32; 3]) -> bool {
+pub(super) fn reacts(game: &GameLevel<'_>, pos: [i32; 3]) -> bool {
     if !game.native_on("create") {
         return false;
     }
@@ -72,7 +72,7 @@ pub(super) fn reacts(game: &Game<'_>, pos: [i32; 3]) -> bool {
             && matches!(held, Some("create:andesite_casing" | "create:brass_casing")))
         || manual(game, pos).is_some()
 }
-fn wheel_material(game: &Game<'_>) -> Option<String> {
+fn wheel_material(game: &GameLevel<'_>) -> Option<String> {
     let held = game.held()?;
     let name = held
         .item
@@ -82,13 +82,13 @@ fn wheel_material(game: &Game<'_>) -> Option<String> {
         .contains(&name)
         .then(|| held.item.to_string())
 }
-fn give(game: &mut Game<'_>, stack: ItemStack, pos: [i32; 3]) {
+fn give(game: &mut GameLevel<'_>, stack: ItemStack, pos: [i32; 3]) {
     let uuid = game.native_acting_id();
     if let Some(rest) = game.native_give_stack(uuid, stack) {
         game.spawn_item(rest, pos.map(|v| f64::from(v) + 0.5), [0.0, 0.2, 0.0], 10);
     }
 }
-fn switch(game: &mut Game<'_>, pos: [i32; 3], block: &str) -> bool {
+fn switch(game: &mut GameLevel<'_>, pos: [i32; 3], block: &str) -> bool {
     let Some(state) = game.pack.assets.registry.default_state(block) else {
         return false;
     };
@@ -111,7 +111,7 @@ fn switch(game: &mut Game<'_>, pos: [i32; 3], block: &str) -> bool {
     game.native_block_entity_sync(pos);
     true
 }
-pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) -> bool {
+pub(super) fn right_click(game: &mut GameLevel<'_>, pos: [i32; 3], face: [i32; 3]) -> bool {
     if super::create_port::inventory_blocked(game, pos) {
         return true;
     }

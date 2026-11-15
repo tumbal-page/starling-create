@@ -4,7 +4,7 @@ use super::Game;
 use crate::containers::BlockEntity;
 use horizon_world::nbt::Tag;
 
-pub(super) fn packet(game: &mut Game<'_>, pos: [i32; 3], kind: i32, tag: &Tag) {
+pub(super) fn packet(game: &mut GameLevel<'_>, pos: [i32; 3], kind: i32, tag: &Tag) {
     if !matches!(tag, Tag::Compound(_)) {
         return;
     }

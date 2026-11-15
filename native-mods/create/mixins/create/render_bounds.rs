@@ -1,5 +1,5 @@
 fn create_render_bounds(
-    game: &crate::game::Game<'_>,
+    game: &crate::game::GameLevel<'_>,
     pos: [i32; 3],
     block: &str,
     entity: &crate::containers::ModBlockEntity,

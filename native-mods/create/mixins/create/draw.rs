@@ -1,5 +1,5 @@
 fn create_on_draw(
-    game: &crate::game::Game<'_>,
+    game: &crate::game::GameLevel<'_>,
     pos: [i32; 3],
     block: &str,
     state: horizon_world::registry::BlockStateId,

@@ -30,7 +30,7 @@ struct Running {
 thread_local! {
     static WORLDS: RefCell<SessionCache<BTreeMap<Pos, Running>>> = RefCell::new(SessionCache::default());
 }
-fn with_world<R>(game: &Game<'_>, action: impl FnOnce(&mut BTreeMap<Pos, Running>) -> R) -> R {
+fn with_world<R>(game: &GameLevel<'_>, action: impl FnOnce(&mut BTreeMap<Pos, Running>) -> R) -> R {
     WORLDS.with(|cache| {
         action(
             cache
@@ -44,12 +44,12 @@ pub(super) fn reset(reload: bool) {
         WORLDS.with(|cache| cache.borrow_mut().clear());
     }
 }
-pub(super) fn maintenance(game: &Game<'_>) {
+pub(super) fn maintenance(game: &GameLevel<'_>) {
     with_world(game, |world| {
         world.retain(|pos, _| game.world.loaded(pos[0], pos[2]) && game.native_block(*pos) == ID)
     });
 }
-pub(super) fn schedule(game: &mut Game<'_>, pos: Pos) {
+pub(super) fn schedule(game: &mut GameLevel<'_>, pos: Pos) {
     if game.native_block(pos) == ID {
         game.native_with_mod_block_entity(pos, |entity| {
             if entity.id == ID {
@@ -63,7 +63,7 @@ pub(super) fn on_speed_changed(entity: &mut ModBlockEntity, previous: f32, curre
         entity.nbt.insert("NeedsUpdate".into(), Tag::Byte(1));
     }
 }
-pub(super) fn basin_removed(game: &Game<'_>, pos: Pos) {
+pub(super) fn basin_removed(game: &GameLevel<'_>, pos: Pos) {
     let Some(crate::containers::BlockEntity::Mod(entity)) =
         game.world.block_entities.get(&(pos[0], pos[1], pos[2]))
     else {
@@ -98,7 +98,7 @@ fn start(entity: &mut ModBlockEntity, cycle: &mut PressCycle) {
 /// this tick and says whether the ordinary BE update should be synchronized.
 /// Called after resolving actual kinetic speed, while this BE is detached.
 pub(super) fn tick(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     entity: &mut ModBlockEntity,
     rpm: f32,

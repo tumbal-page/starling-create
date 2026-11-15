@@ -1,4 +1,4 @@
-fn create_burner_sync_world(game: &crate::game::Game<'_>, phase: crate::mod_api::WorldPhase) {
+fn create_burner_sync_world(game: &crate::game::GameLevel<'_>, phase: crate::mod_api::WorldPhase) {
     if matches!(
         phase,
         crate::mod_api::WorldPhase::WorldOpenFailed

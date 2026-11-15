@@ -60,7 +60,7 @@ fn controller_options(kind: Kind) -> ParticleOptions {
     }
     o
 }
-fn emit(game: &mut Game<'_>, extras: impl IntoIterator<Item = Extra>) {
+fn emit(game: &mut GameLevel<'_>, extras: impl IntoIterator<Item = Extra>) {
     for extra in extras {
         let o = controller_options(extra.kind);
         game.particles.add(&o, extra.position, extra.velocity);
@@ -76,7 +76,7 @@ fn tracing() -> bool {
     static ENABLED: OnceLock<bool> = OnceLock::new();
     *ENABLED.get_or_init(|| std::env::var_os("CREATE_HORIZON_PARTICLE_TRACE").is_some())
 }
-fn trace_spawn(game: &Game<'_>, particle: &Particle, kind: &str, origin: Pos) {
+fn trace_spawn(game: &GameLevel<'_>, particle: &Particle, kind: &str, origin: Pos) {
     if !tracing() {
         return;
     }
@@ -283,7 +283,7 @@ fn type_at(origin: Pos, flow: &Flow, p: [f64; 3]) -> Option<ProcessingType> {
         offset as f32,
     )
 }
-fn airflow(game: &mut Game<'_>, origin: Pos, flow: &Flow, world: usize) {
+fn airflow(game: &mut GameLevel<'_>, origin: Pos, flow: &Flow, world: usize) {
     if !rules::spawn_airflow(&mut Random(&mut game.world.random), 0.5) {
         return;
     }
@@ -398,7 +398,7 @@ pub(super) fn changed(dimension: &str, pos: Pos) {
         }
     });
 }
-fn prepare_server(server: &mut Server, game: &Game<'_>) {
+fn prepare_server(server: &mut Server, game: &GameLevel<'_>) {
     let id = std::ptr::from_ref(game) as usize;
     if server.game != id {
         *server = Server {
@@ -407,7 +407,7 @@ fn prepare_server(server: &mut Server, game: &Game<'_>) {
         };
     }
 }
-pub(super) fn queue_rotation(game: &Game<'_>, pos: Pos) {
+pub(super) fn queue_rotation(game: &GameLevel<'_>, pos: Pos) {
     SERVER.with(|s| {
         let mut s = s.borrow_mut();
         prepare_server(&mut s, game);
@@ -434,7 +434,7 @@ fn tier(speed: f32) -> i32 {
     }
 }
 pub(super) fn server_tick(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     entity: &mut ModBlockEntity,
     old_rpm: f32,
@@ -580,7 +580,7 @@ fn decode(data: &[u8]) -> Option<Vec<RotationEvent>> {
     }
     Some(events)
 }
-pub(super) fn flush(game: &mut Game<'_>, dimension: &str) {
+pub(super) fn flush(game: &mut GameLevel<'_>, dimension: &str) {
     let events = SERVER.with(|s| s.borrow_mut().pending.remove(dimension).unwrap_or_default());
     if events.is_empty() {
         return;
@@ -616,7 +616,7 @@ pub(super) fn flush(game: &mut Game<'_>, dimension: &str) {
         }
     }
 }
-pub(super) fn packet(game: &mut Game<'_>, channel: &str, data: &[u8]) {
+pub(super) fn packet(game: &mut GameLevel<'_>, channel: &str, data: &[u8]) {
     if channel != CHANNEL
         || !game.native_window()
         || game.remote.is_none()
@@ -633,7 +633,7 @@ pub(super) fn packet(game: &mut Game<'_>, channel: &str, data: &[u8]) {
         spawn_rotation(game, e, world);
     }
 }
-fn spawn_rotation(game: &mut Game<'_>, event: RotationEvent, world: usize) {
+fn spawn_rotation(game: &mut GameLevel<'_>, event: RotationEvent, world: usize) {
     let RotationEvent {
         pos,
         color,
@@ -690,7 +690,7 @@ pub(super) fn animation_time(partial: f32) -> f32 {
     CLIENT.with(|client| client.borrow().ticks as f32 + partial)
 }
 
-pub(super) fn client_tick(game: &mut Game<'_>) {
+pub(super) fn client_tick(game: &mut GameLevel<'_>) {
     if !game.native_window() || game.remote.is_none() || !game.native_on("create") {
         return;
     }

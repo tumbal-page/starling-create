@@ -1,4 +1,4 @@
-fn create_visual_tick(game: &mut crate::game::Game<'_>) {
+fn create_visual_tick(game: &mut crate::game::GameLevel<'_>) {
     crate::game::create_port_burner_sync::tick(game);
     crate::game::create_port_nativeaudio::begin_tick(game);
     crate::game::create_port_fan::client_tick(game);

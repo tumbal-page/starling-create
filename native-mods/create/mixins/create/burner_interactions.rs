@@ -2,7 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Create6.0.10 ac0c444: BlazeBurnerBlock/BlazeBurnerBlockItem/LitBlazeBurnerBlock.
-use super::Game;
+use super::GameLevel;
 use crate::{containers::BlockEntity, items::ItemStack};
 use horizon_client::particles::{ParticleOptions, ParticleType};
 use horizon_core::random::RandomSource;
@@ -22,7 +22,7 @@ enum Action {
 }
 
 /// Only the base clone ID; the caller retains its normal Ctrl-pick NBT path.
-pub(super) fn clone_item(game: &Game<'_>, pos: Pos) -> Option<&'static str> {
+pub(super) fn clone_item(game: &GameLevel<'_>, pos: Pos) -> Option<&'static str> {
     match game.native_block(pos).as_str() {
         LIT => Some(EMPTY),
         BLOCK => Some(
@@ -36,7 +36,7 @@ pub(super) fn clone_item(game: &Game<'_>, pos: Pos) -> Option<&'static str> {
     }
 }
 
-fn action(game: &Game<'_>, pos: Pos, held: &ItemStack) -> Option<Action> {
+fn action(game: &GameLevel<'_>, pos: Pos, held: &ItemStack) -> Option<Action> {
     let bypass = game.keys.contains(&winit::keyboard::KeyCode::ShiftLeft)
         && (game
             .inventory
@@ -70,7 +70,7 @@ fn action(game: &Game<'_>, pos: Pos, held: &ItemStack) -> Option<Action> {
         _ => None,
     }
 }
-fn capturable(game: &Game<'_>, kind: &str) -> bool {
+fn capturable(game: &GameLevel<'_>, kind: &str) -> bool {
     let matches = |id: &str| {
         id.strip_prefix("minecraft:").unwrap_or(id)
             == kind.strip_prefix("minecraft:").unwrap_or(kind)
@@ -89,7 +89,7 @@ fn tag_kind(tag: &horizon_world::nbt::Compound) -> Option<String> {
         _ => None,
     }
 }
-fn spawner(game: &Game<'_>, pos: Pos) -> bool {
+fn spawner(game: &GameLevel<'_>, pos: Pos) -> bool {
     let Some(BlockEntity::Spawner(spawner)) =
         game.world.block_entities.get(&(pos[0], pos[1], pos[2]))
     else {
@@ -111,7 +111,7 @@ fn spawner(game: &Game<'_>, pos: Pos) -> bool {
     data.and_then(|data| tag_kind(&data.entity))
         .is_some_and(|id| capturable(game, &id))
 }
-fn capture_item(game: &mut Game<'_>) {
+fn capture_item(game: &mut GameLevel<'_>) {
     if !game.creative {
         game.consume_held();
     }
@@ -127,14 +127,14 @@ fn capture_item(game: &mut Game<'_>) {
         }
     }
 }
-fn capture_sound(game: &mut Game<'_>, at: [f64; 3]) {
+fn capture_sound(game: &mut GameLevel<'_>, at: [f64; 3]) {
     let at = at.map(|v| v.floor() + 0.5);
     game.with_level(|_, level, _| {
         level.native_play_sound("minecraft:entity.blaze.hurt", at, 5, 0.25, 0.75);
         level.native_play_sound("minecraft:block.fire.extinguish", at, 5, 0.5, 0.75);
     });
 }
-fn block_sound(game: &mut Game<'_>, pos: Pos, action: Action, client: bool) {
+fn block_sound(game: &mut GameLevel<'_>, pos: Pos, action: Action, client: bool) {
     let (sound, volume, pitch) = match action {
         Action::Extinguish => ("minecraft:entity.generic.extinguish_fire", 0.5, 2.0),
         Action::Ignite | Action::Soul => {
@@ -165,7 +165,7 @@ fn block_sound(game: &mut Game<'_>, pos: Pos, action: Action, client: bool) {
     );
 }
 
-pub(super) fn reacts(game: &Game<'_>, pos: Pos, held: Option<&ItemStack>) -> bool {
+pub(super) fn reacts(game: &GameLevel<'_>, pos: Pos, held: Option<&ItemStack>) -> bool {
     if !game.native_on("create") {
         return false;
     }
@@ -175,7 +175,7 @@ pub(super) fn reacts(game: &Game<'_>, pos: Pos, held: Option<&ItemStack>) -> boo
     })
 }
 /// Run before the filled burner's fuel handler; source block writes follow sound/wear.
-pub(super) fn right_click(game: &mut Game<'_>, pos: Pos) -> bool {
+pub(super) fn right_click(game: &mut GameLevel<'_>, pos: Pos) -> bool {
     let Some(held) = game.held().filter(|s| s.count > 0).cloned() else {
         return false;
     };
@@ -217,7 +217,7 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: Pos) -> bool {
 }
 /// Source interactLivingEntity returns FAIL: consume the click without a swing.
 /// The post-mob item hook consumes this hand turn without an arm swing.
-pub(super) fn interact_entity(game: &mut Game<'_>, id: i32, kind: &str) -> bool {
+pub(super) fn interact_entity(game: &mut GameLevel<'_>, id: i32, kind: &str) -> bool {
     if !game.native_on("create")
         || !game
             .held()
@@ -237,7 +237,7 @@ pub(super) fn interact_entity(game: &mut Game<'_>, id: i32, kind: &str) -> bool 
     capture_item(game);
     game.native_remove_mob(game.dim.id(), id as u32)
 }
-fn capture_particles(game: &mut Game<'_>, at: [f64; 3]) {
+fn capture_particles(game: &mut GameLevel<'_>, at: [f64; 3]) {
     for _ in 0..40 {
         let random = game.particles.level_random();
         let motion = std::array::from_fn::<_, 3, _>(|_| {
@@ -261,7 +261,7 @@ fn capture_particles(game: &mut Game<'_>, at: [f64; 3]) {
 }
 /// After the normal UseItemOn packet, before vanilla prediction/other-hand fallback.
 /// Caller swings once for this SUCCESS; inventory/state changes remain server-owned.
-pub(super) fn predict_block(game: &mut Game<'_>, pos: Pos, held: Option<&ItemStack>) -> bool {
+pub(super) fn predict_block(game: &mut GameLevel<'_>, pos: Pos, held: Option<&ItemStack>) -> bool {
     if !reacts(game, pos, held) {
         return false;
     }
@@ -273,7 +273,7 @@ pub(super) fn predict_block(game: &mut Game<'_>, pos: Pos, held: Option<&ItemSta
     true
 }
 /// After the normal Interact packet, return true without swinging or mutating the stack.
-pub(super) fn entity_reacts(game: &mut Game<'_>, index: usize, hand: crate::game::Hand) -> bool {
+pub(super) fn entity_reacts(game: &mut GameLevel<'_>, index: usize, hand: crate::game::Hand) -> bool {
     if !game.native_on("create")
         || !game.with_hand(hand, |g| {
             g.held()
@@ -290,7 +290,7 @@ pub(super) fn entity_reacts(game: &mut Game<'_>, index: usize, hand: crate::game
     }
     true
 }
-pub(super) fn predict_entity(game: &mut Game<'_>, index: usize, hand: crate::game::Hand) -> bool {
+pub(super) fn predict_entity(game: &mut GameLevel<'_>, index: usize, hand: crate::game::Hand) -> bool {
     if !entity_reacts(game, index, hand) {
         return false;
     }

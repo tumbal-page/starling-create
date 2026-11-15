@@ -91,7 +91,7 @@ struct Client {
     rows: Vec<Row>,
 }
 impl Client {
-    fn prepare(&mut self, game: &Game<'_>) {
+    fn prepare(&mut self, game: &GameLevel<'_>) {
         self.prepare_for(std::ptr::from_ref(game) as usize, game.native_dimension());
     }
     fn prepare_for(&mut self, id: usize, dimension: &str) {
@@ -161,7 +161,7 @@ impl rules::Random for Random<'_> {
     }
 }
 
-fn facing(game: &Game<'_>, pos: [i32; 3]) -> Direction {
+fn facing(game: &GameLevel<'_>, pos: [i32; 3]) -> Direction {
     match game.native_block_property(pos, "facing").as_deref() {
         Some("north") => Direction::North,
         Some("west") => Direction::West,
@@ -169,20 +169,20 @@ fn facing(game: &Game<'_>, pos: [i32; 3]) -> Direction {
         _ => Direction::South,
     }
 }
-fn heat(game: &Game<'_>, pos: [i32; 3]) -> Heat {
+fn heat(game: &GameLevel<'_>, pos: [i32; 3]) -> Heat {
     game.native_block_property(pos, "blaze")
         .as_deref()
         .and_then(super::create_port_burner::heat)
         .unwrap_or(Heat::None)
 }
-fn valid_above(game: &Game<'_>, pos: [i32; 3]) -> bool {
+fn valid_above(game: &GameLevel<'_>, pos: [i32; 3]) -> bool {
     let above = [pos[0], pos[1] + 1, pos[2]];
     // BasinBlock.isBasin checks the actual entity type. FluidTankBlock is a
     // block-class test; tank mechanics themselves are outside the current slice.
     matches!(game.world.block_entities.get(&(above[0],above[1],above[2])),Some(BlockEntity::Mod(e)) if e.id=="create:basin")
         || game.native_block(above) == "create:fluid_tank"
 }
-fn emit(game: &mut Game<'_>, particle: Particle) {
+fn emit(game: &mut GameLevel<'_>, particle: Particle) {
     let kind = match particle.kind {
         ParticleKind::Smoke => ParticleType::LargeSmoke,
         ParticleKind::Flame => ParticleType::Flame,
@@ -194,7 +194,7 @@ fn emit(game: &mut Game<'_>, particle: Particle) {
         particle.velocity,
     );
 }
-fn rows(game: &Game<'_>) -> Vec<Row> {
+fn rows(game: &GameLevel<'_>) -> Vec<Row> {
     CLIENT.with(|cache| {
         let mut cache = cache.borrow_mut();
         cache.prepare(game);
@@ -232,7 +232,7 @@ fn rows(game: &Game<'_>) -> Vec<Row> {
 }
 
 /// Actual client BE tick boundary, before ParticleEngine.tick admits new requests.
-pub(super) fn client_particles(game: &mut Game<'_>) {
+pub(super) fn client_particles(game: &mut GameLevel<'_>) {
     if !game.native_window()
         || game.remote.is_none()
         || !game.native_on("create")
@@ -267,7 +267,7 @@ pub(super) fn client_particles(game: &mut Game<'_>) {
 
 /// Called from the normal post-level client tick, after the shared Catnip clock.
 /// Flywheel's TickableVisual keeps chasing while /tick freeze stops BE particles.
-pub(super) fn client_tick(game: &mut Game<'_>) {
+pub(super) fn client_tick(game: &mut GameLevel<'_>) {
     if !game.native_window() || game.remote.is_none() || !game.native_on("create") || game.pause {
         return;
     }
@@ -306,7 +306,7 @@ pub(super) fn client_tick(game: &mut Game<'_>) {
 
 /// The original client-side tryUpdateFuel/applyCreativeFuel burst; callers must
 /// use their actual source eligibility/prediction result, never a server echo.
-pub(super) fn burst(game: &mut Game<'_>, pos: [i32; 3], soul: bool) {
+pub(super) fn burst(game: &mut GameLevel<'_>, pos: [i32; 3], soul: bool) {
     let mut particles = Vec::with_capacity(20);
     rules::particle_burst(
         soul,
@@ -320,7 +320,7 @@ pub(super) fn burst(game: &mut Game<'_>, pos: [i32; 3], soul: bool) {
 }
 
 fn part(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     draw: &mut BlockEntityDraw,
     model: &str,
     y: f32,
@@ -346,7 +346,7 @@ fn part(
     draw.pop();
 }
 pub(super) fn draw(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: [i32; 3],
     state: BlockStateId,
     entity: &ModBlockEntity,
@@ -483,7 +483,7 @@ pub(super) fn reset() {
 }
 /// Flywheel recreates visuals on resource reload, while their client block
 /// entities (including both chasers and identity hashes) stay alive.
-pub(super) fn resources_reloaded(game: &Game<'_>) {
+pub(super) fn resources_reloaded(game: &GameLevel<'_>) {
     CLIENT.with(|cache| {
         let mut cache = cache.borrow_mut();
         cache.prepare(game);
@@ -504,7 +504,7 @@ pub(super) fn sprites(out: &mut Vec<String>) {
 /// Called only by the actual client submit path. The opt-in gate precedes all collection,
 /// string allocation and cache access; no arbitrary NBT values are logged.
 pub(super) fn trace_client_state(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     pos: [i32; 3],
     state: BlockStateId,
     entity: &ModBlockEntity,

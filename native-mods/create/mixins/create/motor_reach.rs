@@ -20,7 +20,7 @@ fn within_configuration_range(eye: [f64; 3], pos: [i32; 3], interaction_range: f
     distance_squared < range * range
 }
 
-impl Game<'_> {
+impl GameLevel<'_> {
     /// Player-only admission check, also before the queued request's dimension
     /// is in place. The caller must separately check its world, dimension and
     /// loaded target immediately before applying the setting.

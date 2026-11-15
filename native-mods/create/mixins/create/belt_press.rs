@@ -27,12 +27,12 @@ fn decision(value: BeltDecision) -> ProcessingResult {
         BeltDecision::Hold => ProcessingResult::Hold,
     }
 }
-pub(super) fn available(game: &Game<'_>, pos: Pos) -> bool {
+pub(super) fn available(game: &GameLevel<'_>, pos: Pos) -> bool {
     game.native_block(pos) == "create:mechanical_press"
         && matches!(game.world.block_entities.get(&(pos[0],pos[1],pos[2])),
             Some(BlockEntity::Mod(e)) if e.id == "create:mechanical_press")
 }
-fn state(game: &Game<'_>, pos: Pos) -> Option<BeltPressState> {
+fn state(game: &GameLevel<'_>, pos: Pos) -> Option<BeltPressState> {
     if !available(game, pos) {
         return None;
     }
@@ -47,7 +47,7 @@ fn state(game: &Game<'_>, pos: Pos) -> Option<BeltPressState> {
     })
 }
 pub(super) fn received(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     item: &mut Transported<ItemStack>,
 ) -> ProcessingUpdate<ItemStack> {
@@ -108,7 +108,7 @@ impl BeltPressContext<ItemStack> for Context<'_, '_> {
     }
 }
 pub(super) fn held(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     item: &mut Transported<ItemStack>,
 ) -> ProcessingUpdate<ItemStack> {

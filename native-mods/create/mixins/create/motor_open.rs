@@ -1,5 +1,5 @@
 fn motor_open(
-    game: &mut crate::game::Game<'_>,
+    game: &mut crate::game::GameLevel<'_>,
     button: i32,
     hand: horizon_client::first_person::Hand,
     swing: &mut bool,

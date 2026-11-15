@@ -1,5 +1,5 @@
 fn motor_drag(
-    game: &crate::game::Game<'_>,
+    game: &crate::game::GameLevel<'_>,
     screen: &crate::mod_api::NativeScreenView<'_>,
     button: i32,
     canceled: &mut bool,
