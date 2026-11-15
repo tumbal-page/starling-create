@@ -116,6 +116,16 @@ impl BlockEntityDraw {
                 * Mat4::from_translation(-pivot),
         );
     }
+    /// Like [`rotate_about`] but `radians` are already in radians.
+    pub fn rotate_about_radians(&mut self, axis: [f32; 3], radians: f32, pivot: [f32; 3]) {
+        let axis = Vec3::from_array(axis).normalize_or(Vec3::Y);
+        let pivot = Vec3::from_array(pivot);
+        self.apply(
+            Mat4::from_translation(pivot)
+                * Mat4::from_quat(Quat::from_axis_angle(axis, radians))
+                * Mat4::from_translation(-pivot),
+        );
+    }
     /// Scales what is drawn next by `by` about the pose's origin.
     pub fn scale(&mut self, by: [f32; 3]) {
         self.apply(Mat4::from_scale(Vec3::from_array(by)));

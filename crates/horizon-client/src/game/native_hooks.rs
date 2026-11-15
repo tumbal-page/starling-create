@@ -1051,6 +1051,12 @@ pub(super) use horizon_world::level::flags;
 pub(crate) const NATIVE_HOOKS_API: u32 = 645;
 
 impl GameLevel<'_> {
+    /// Whether mod `mod_id` is enabled. On `GameLevel` the settings are not
+    /// directly available; a mod whose code is running is always enabled.
+    pub(super) fn native_on(&self, _mod_id: &str) -> bool {
+        true
+    }
+
     /// A hopper at `pos` is about to pick up `count` of `item`. Set `cancel` to leave the dropped stack in the world. Server-side. 232.
     #[inline(always)]
     pub(super) fn native_hopper_pickup_item(

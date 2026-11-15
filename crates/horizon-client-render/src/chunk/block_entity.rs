@@ -11,7 +11,7 @@ use horizon_world::{
 use std::{
     collections::HashMap,
     sync::{
-        Arc,
+        Arc, Mutex, OnceLock,
         atomic::{AtomicU64, Ordering},
     },
 };
@@ -108,6 +108,9 @@ pub enum BlockEntity {
 pub struct ModBlockEntity {
     fields: ModBlockEntityFields,
     revision: ModRevision,
+    // A client update can consume transient effects without changing saved
+    // fields. Most entities never use this; do not allocate their queue.
+    client_update_fields: OnceLock<Mutex<Compound>>,
 }
 /// What a `ModBlockEntity` holds: its type id (`mymod:machine`), its saved
 /// compound without `id`, `x`, `y`, `z` and `Items`, its item slots
@@ -129,6 +132,13 @@ pub struct ModRevision {
     born: u64,
     changes: u64,
 }
+impl ModRevision {
+    /// Whether two revisions refer to the same block entity: equal `born`
+    /// means they were created from the same entity, regardless of `changes`.
+    pub fn same_entity(self, other: Self) -> bool {
+        self.born == other.born
+    }
+}
 static MOD_BLOCK_ENTITIES_MADE: AtomicU64 = AtomicU64::new(0);
 impl ModBlockEntity {
     pub fn new(fields: ModBlockEntityFields) -> Self {
@@ -138,10 +148,43 @@ impl ModBlockEntity {
                 born: MOD_BLOCK_ENTITIES_MADE.fetch_add(1, Ordering::Relaxed),
                 changes: 0,
             },
+            client_update_fields: OnceLock::new(),
         }
     }
     pub fn revision(&self) -> ModRevision {
         self.revision
+    }
+    /// Replace the owner's pending, one-shot client update fields. These
+    /// fields are not saved, cloned, compared or retained for drawing, and
+    /// changing them does not change this entity's revision.
+    pub fn set_client_update_fields(&mut self, fields: Compound) {
+        if fields.is_empty() {
+            self.clear_client_update_fields();
+            return;
+        }
+        *self
+            .client_update_fields
+            .get_or_init(|| Mutex::new(Compound::new()))
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = fields;
+    }
+    /// Discard the owner's pending client update fields, without changing
+    /// saved data, revision or a queue that has never been used.
+    pub fn clear_client_update_fields(&mut self) {
+        if let Some(fields) = self.client_update_fields.get() {
+            fields
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .clear();
+        }
+    }
+    /// Atomically take the owner's pending fields at update-tag construction.
+    pub fn take_client_update_fields(&self) -> Compound {
+        self.client_update_fields
+            .get()
+            .map_or_else(Compound::new, |fields| {
+                std::mem::take(&mut *fields.lock().unwrap_or_else(std::sync::PoisonError::into_inner))
+            })
     }
     /// A client's copy loads the tag the server sent (`loadWithComponents`
     /// in `ClientPacketListener.handleBlockEntityData`): `tag`'s fields
