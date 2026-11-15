@@ -89,18 +89,6 @@ kind = "HEAD"
 helper = "assets_startup.rs"
 bindings = [{ name = "root", ty = "&mut std::path::PathBuf", value = "&mut root" }]
 
-[[injection]]
-id = "local-assets-reload"
-target = "horizon_client::game::packs::stage_pack"
-kind = "AFTER_CALL"
-selector = "startup_root"
-ordinal = 0
-require = 1
-result = "std::io::Result<std::path::PathBuf>"
-helper = "assets_root.rs"
-bindings = [
-  { name = "result", ty = "&mut std::io::Result<std::path::PathBuf>", value = "$result_mut" },
-]
 
 [[injection]]
 id = "entity"
