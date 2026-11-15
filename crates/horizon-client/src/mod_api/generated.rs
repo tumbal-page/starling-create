@@ -4637,7 +4637,323 @@ pub trait Hooks: Send + Sync {
         let _ = host;
         let _ = event;
     }
+    /// Submit depth-tested world text and textured quads, after particles and
+    /// before the hand/HUD. API 431.
+    fn world_submit(&self, level: &dyn LevelHost, event: &mut WorldSubmitEvent<'_>) {
+        let _ = level;
+        let _ = event;
+    }
+    /// Opt a mod block into canonical custom fluid storage. API 452.
+    fn custom_block_fluids(&self, level: &dyn LevelHost, event: &mut CustomBlockFluidsEvent<'_>) {
+        let _ = level;
+        let _ = event;
+    }
+    /// Read the declared custom fluid tank capability.
+    fn custom_fluid_tanks(&self, level: &dyn LevelHost, event: &mut CustomFluidTanksEvent<'_>) {
+        let _ = level;
+        let _ = event;
+    }
+    /// Fill the declared custom fluid capability, returning the accepted amount.
+    fn custom_fluid_fill(&self, level: &dyn LevelHost, event: &mut CustomFluidFillEvent<'_>) {
+        let _ = level;
+        let _ = event;
+    }
+    /// Drain the declared custom fluid capability.
+    fn custom_fluid_drain(&self, level: &dyn LevelHost, event: &mut CustomFluidDrainEvent<'_>) {
+        let _ = level;
+        let _ = event;
+    }
+    /// Opt a non-vanilla block into a state-aware block entity factory. API 572.
+    fn stateful_block_entity(&self, level: &dyn LevelHost, event: &mut StatefulBlockEntityEvent<'_>) {
+        let _ = level;
+        let _ = event;
+    }
+    /// Create a block entity from block state properties.
+    fn block_entity_from_state(
+        &self,
+        level: &dyn LevelHost,
+        block: &str,
+        properties: &BlockProperties,
+        entity: &mut Option<(String, Compound)>,
+    ) {
+        let _ = level;
+        let _ = block;
+        let _ = properties;
+        let _ = entity;
+    }
+    /// A player interacts with a mob using an item. API 449.
+    fn item_interact_mob(&self, level: &dyn LevelHost, event: &mut ItemInteractMobEvent<'_>) {
+        let _ = level;
+        let _ = event;
+    }
+    /// A block's clone item before Ctrl+Pick adds block-entity components. API 448.
+    fn block_clone_item(&self, level: &dyn LevelHost, event: &mut BlockCloneItemEvent<'_>) {
+        let _ = level;
+        let _ = event;
+    }
+    /// A dropped item's vertical move clipped after collision response. API 456.
+    fn item_after_vertical_collision(
+        &self,
+        level: &dyn LevelHost,
+        event: &mut ItemAfterVerticalCollisionEvent<'_>,
+    ) {
+        let _ = level;
+        let _ = event;
+    }
 }
+/// What [`Hooks::world_submit`] is told.
+pub struct WorldSubmitEvent<'a> {
+    pub draw: &'a mut NativeWorldDraw,
+}
+/// What [`Hooks::custom_block_fluids`] is told.
+#[non_exhaustive]
+pub struct CustomBlockFluidsEvent<'a> {
+    pub block: String,
+    pub custom: &'a mut bool,
+}
+/// What [`Hooks::custom_fluid_tanks`] is told. Fields may be added.
+#[non_exhaustive]
+pub struct CustomFluidTanksEvent<'a> {
+    pub pos: [i32; 3],
+    pub side: Option<Direction>,
+    pub out: &'a mut Option<Vec<NativeFluidTankView>>,
+}
+/// What [`Hooks::custom_fluid_fill`] is told.
+#[non_exhaustive]
+pub struct CustomFluidFillEvent<'a> {
+    pub pos: [i32; 3],
+    pub side: Option<Direction>,
+    pub resource: NativeFluidStack,
+    pub action: NativeFluidAction,
+    pub out: &'a mut Option<i32>,
+}
+/// What [`Hooks::custom_fluid_drain`] is told.
+#[non_exhaustive]
+pub struct CustomFluidDrainEvent<'a> {
+    pub pos: [i32; 3],
+    pub side: Option<Direction>,
+    pub request: NativeFluidDrain,
+    pub action: NativeFluidAction,
+    pub out: &'a mut Option<NativeFluidStack>,
+}
+/// What [`Hooks::stateful_block_entity`] is told.
+pub struct StatefulBlockEntityEvent<'a> {
+    pub block: String,
+    pub stateful: &'a mut bool,
+}
+/// What [`Hooks::block_entity_from_state`] is told.
+pub struct BlockEntityFromStateEvent<'a> {
+    pub block: String,
+    pub properties: BlockProperties,
+    pub entity: &'a mut Option<(String, Compound)>,
+}
+/// What [`Hooks::item_interact_mob`] is told.
+#[non_exhaustive]
+pub struct ItemInteractMobEvent<'a> {
+    pub entity: i32,
+    pub kind: String,
+    pub stack: Option<ItemStack>,
+    pub swing: &'a mut Option<bool>,
+}
+/// What [`Hooks::block_clone_item`] is told.
+#[non_exhaustive]
+pub struct BlockCloneItemEvent<'a> {
+    pub block: String,
+    pub pos: [i32; 3],
+    pub state: BlockStateId,
+    pub stack: &'a mut Option<ItemStack>,
+}
+/// What [`Hooks::item_after_vertical_collision`] is told.
+#[non_exhaustive]
+pub struct ItemAfterVerticalCollisionEvent<'a> {
+    pub dimension: String,
+    pub client: bool,
+    pub entity: u32,
+    pub state: BlockStateId,
+    pub block_pos: [i32; 3],
+    pub item_pos: [f64; 3],
+    pub stack: ItemStack,
+    pub discard: &'a mut bool,
+}
+
+pub fn dispatch_world_submit(
+    level: &dyn LevelHost,
+    mods: &[Box<dyn Hooks>],
+    draw: &mut NativeWorldDraw,
+) {
+    let mut event = WorldSubmitEvent { draw };
+    for mod_hook in super::entered(mods, "world_submit") {
+        mod_hook.world_submit(level, &mut event);
+    }
+}
+
+pub fn dispatch_custom_block_fluids(
+    level: &dyn LevelHost,
+    mods: &[Box<dyn Hooks>],
+    block: &str,
+    custom: &mut bool,
+) {
+    let mut event = CustomBlockFluidsEvent {
+        block: block.to_owned(),
+        custom,
+    };
+    for mod_hook in super::entered(mods, "custom_block_fluids") {
+        mod_hook.custom_block_fluids(level, &mut event);
+    }
+}
+
+pub fn dispatch_custom_fluid_tanks(
+    level: &dyn LevelHost,
+    mods: &[Box<dyn Hooks>],
+    pos: [i32; 3],
+    side: Option<Direction>,
+    out: &mut Option<Vec<NativeFluidTankView>>,
+) {
+    let mut event = CustomFluidTanksEvent { pos, side, out };
+    for mod_hook in super::entered(mods, "custom_fluid_tanks") {
+        mod_hook.custom_fluid_tanks(level, &mut event);
+    }
+}
+
+pub fn dispatch_custom_fluid_fill(
+    level: &dyn LevelHost,
+    mods: &[Box<dyn Hooks>],
+    pos: [i32; 3],
+    side: Option<Direction>,
+    resource: &NativeFluidStack,
+    action: NativeFluidAction,
+    out: &mut Option<i32>,
+) {
+    let mut event = CustomFluidFillEvent {
+        pos,
+        side,
+        resource: resource.clone(),
+        action,
+        out,
+    };
+    for mod_hook in super::entered(mods, "custom_fluid_fill") {
+        mod_hook.custom_fluid_fill(level, &mut event);
+    }
+}
+
+pub fn dispatch_custom_fluid_drain(
+    level: &dyn LevelHost,
+    mods: &[Box<dyn Hooks>],
+    pos: [i32; 3],
+    side: Option<Direction>,
+    request: &NativeFluidDrain,
+    action: NativeFluidAction,
+    out: &mut Option<NativeFluidStack>,
+) {
+    let mut event = CustomFluidDrainEvent {
+        pos,
+        side,
+        request: request.clone(),
+        action,
+        out,
+    };
+    for mod_hook in super::entered(mods, "custom_fluid_drain") {
+        mod_hook.custom_fluid_drain(level, &mut event);
+    }
+}
+
+pub fn dispatch_stateful_block_entity(
+    level: &dyn LevelHost,
+    mods: &[Box<dyn Hooks>],
+    block: &str,
+    stateful: &mut bool,
+) {
+    let mut event = StatefulBlockEntityEvent {
+        block: block.to_owned(),
+        stateful,
+    };
+    for mod_hook in super::entered(mods, "stateful_block_entity") {
+        mod_hook.stateful_block_entity(level, &mut event);
+    }
+}
+
+pub fn dispatch_block_entity_from_state(
+    level: &dyn LevelHost,
+    mods: &[Box<dyn Hooks>],
+    block: &str,
+    properties: &BlockProperties,
+    entity: &mut Option<(String, Compound)>,
+) {
+    let mut event = BlockEntityFromStateEvent {
+        block: block.to_owned(),
+        properties: properties.clone(),
+        entity,
+    };
+    for mod_hook in super::entered(mods, "block_entity_from_state") {
+        mod_hook.block_entity_from_state(level, &mut event.block, &mut event.properties, &mut event.entity);
+    }
+}
+
+pub fn dispatch_item_interact_mob(
+    level: &dyn LevelHost,
+    mods: &[Box<dyn Hooks>],
+    entity: i32,
+    kind: &str,
+    stack: Option<&ItemStack>,
+    swing: &mut Option<bool>,
+) {
+    let mut event = ItemInteractMobEvent {
+        entity,
+        kind: kind.to_owned(),
+        stack: stack.cloned(),
+        swing,
+    };
+    for mod_hook in super::entered(mods, "item_interact_mob") {
+        mod_hook.item_interact_mob(level, &mut event);
+    }
+}
+
+pub fn dispatch_block_clone_item(
+    level: &dyn LevelHost,
+    mods: &[Box<dyn Hooks>],
+    block: &str,
+    pos: [i32; 3],
+    state: BlockStateId,
+    stack: &mut Option<ItemStack>,
+) {
+    let mut event = BlockCloneItemEvent {
+        block: block.to_owned(),
+        pos,
+        state,
+        stack,
+    };
+    for mod_hook in super::entered(mods, "block_clone_item") {
+        mod_hook.block_clone_item(level, &mut event);
+    }
+}
+
+pub fn dispatch_item_after_vertical_collision(
+    level: &dyn LevelHost,
+    mods: &[Box<dyn Hooks>],
+    dimension: &str,
+    client: bool,
+    entity: u32,
+    state: BlockStateId,
+    block_pos: [i32; 3],
+    item_pos: [f64; 3],
+    stack: &mut ItemStack,
+    discard: &mut bool,
+) {
+    let mut event = ItemAfterVerticalCollisionEvent {
+        dimension: dimension.to_owned(),
+        client,
+        entity,
+        state,
+        block_pos,
+        item_pos,
+        stack: stack.clone(),
+        discard,
+    };
+    for mod_hook in super::entered(mods, "item_after_vertical_collision") {
+        mod_hook.item_after_vertical_collision(level, &mut event);
+    }
+}
+
 /// What [`Hooks::frame`] is told. Fields may be added: the struct is `#[non_exhaustive]`.
 #[non_exhaustive]
 pub struct FrameEvent {

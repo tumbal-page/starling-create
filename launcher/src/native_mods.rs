@@ -29,13 +29,21 @@ use std::process::{Command, Stdio};
 mod api;
 mod crates;
 mod dependencies;
+mod diagnostics;
 mod inject;
 mod inject_cache;
+mod isolate;
+mod source;
+mod tests;
+
+use source::installed_mods_into;
+
+pub use isolate::LeftOut;
 
 const PREFIX: &str = "native-";
 /// horizon-mixins, for bundles that don't name the revision they were tested with.
 const MIXINS_GIT: &str = "https://github.com/horizon-rust/horizon-mixins";
-pub const MIXINS_REV: &str = "ddd9700b21997c95d95ac6ee5ecafe3830cf622a";
+pub const MIXINS_REV: &str = "5a64af938ec86b00d53d16a408aabc0038fb3e57";
 /// The features of the release's own game (game-build.yml).
 const FEATURES: &str = "horizon-client/mods";
 
@@ -427,35 +435,7 @@ pub const INSTALLED: &str = "horizon-native-mods";
 /// Each `.hnmod` is checked again as the registry checks it (Rust and TOML under
 /// `mixins/<id>/`, plus files under its `data/`, nothing run).
 pub fn installed_mods(home: &Path) -> Result<PathBuf, String> {
-    let out = root().join("installed.incoming");
-    let _ = fs::remove_dir_all(&out);
-    let mut paths: Vec<PathBuf> = fs::read_dir(home.join(INSTALLED))
-        .map(|dir| dir.flatten().map(|e| e.path()).collect())
-        .unwrap_or_default();
-    paths.retain(|p| p.extension().is_some_and(|e| e == "hnmod"));
-    paths.sort();
-    let mut count = 0;
-    for path in paths {
-        let bundle = horizon_mods::index::native::Bundle::read(&path)
-            .map_err(|e| format!("{}: {e}", path.display()))?;
-        if !crate::browser::java::is_enabled(home, &bundle.manifest.id) {
-            continue;
-        }
-        let dir = out.join(&bundle.manifest.id);
-        for (name, bytes) in &bundle.files {
-            let to = dir.join(name);
-            fs::create_dir_all(to.parent().unwrap_or(&dir)).map_err(|e| e.to_string())?;
-            fs::write(&to, bytes).map_err(|e| format!("{}: {e}", to.display()))?;
-        }
-        count += 1;
-    }
-    if count == 0 {
-        return Err(format!(
-            "No native mod is turned on in {}: install one from the Mods page first.",
-            home.join(INSTALLED).display()
-        ));
-    }
-    Ok(out)
+    installed_mods_into(home, &root().join("installed.incoming"))
 }
 
 /// A mixin bundle: a folder with a `horizon-mixin.toml`, and the revisions it pins.
@@ -488,6 +468,9 @@ pub struct Injection {
     pub id: String,
     /// Where it injects: a native hook point by name, or a raw function path.
     pub site: InjectionSite,
+    /// A named hook point's `hook_version`: with the name, what the revision's
+    /// `native-hooks.json` must list for horizon-mixins to find it.
+    pub hook_version: Option<u32>,
     /// Its `kind` (`HEAD`, `RETURN`, …) as written.
     pub kind: Option<String>,
     /// Its `selector` and `ordinal`, which with the kind tell two interior
@@ -517,6 +500,19 @@ impl InjectionSite {
             Self::Hook(name) => format!("hook `{name}`"),
             Self::Target(path) => format!("`{path}`"),
         }
+    }
+}
+
+impl Bundle {
+    /// The named hook points it injects at, with their versions: each must be in the
+    /// `native-hooks.json` of the revision it builds on.
+    fn named_hooks(&self) -> impl Iterator<Item = (&str, u32)> {
+        self.injections
+            .iter()
+            .filter_map(|i| match (&i.site, i.hook_version) {
+                (InjectionSite::Hook(name), Some(version)) => Some((name.as_str(), version)),
+                _ => None,
+            })
     }
 }
 
@@ -651,6 +647,10 @@ fn bundle(dir: &Path, mixins: Option<String>) -> Result<Bundle, String> {
             Some(Injection {
                 id,
                 site,
+                hook_version: entry
+                    .get("hook_version")
+                    .and_then(|v| v.as_integer())
+                    .and_then(|v| u32::try_from(v).ok()),
                 kind: text("kind"),
                 selector: text("selector"),
                 ordinal: entry.get("ordinal").and_then(|v| v.as_integer()),
@@ -690,6 +690,24 @@ fn bundle(dir: &Path, mixins: Option<String>) -> Result<Bundle, String> {
 
 fn is_revision(text: &str) -> bool {
     text.len() == 40 && text.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+}
+
+/// Extracts the mod id from a mixin manifest or mod file path
+/// (e.g. `.../mixins.incoming/<mod_id>/...` or `.../mods.incoming/<mod_id>/...`).
+fn mod_id_from_file(file: &str) -> Option<&str> {
+    for prefix in ["mixins.incoming", "mods.incoming"] {
+        if let Some(pos) = file.find(prefix) {
+            let rest = &file[pos + prefix.len()..];
+            let sub = rest.trim_start_matches(['/', '\\']);
+            if let Some(end) = sub.find(['/', '\\']) {
+                let id = &sub[..end];
+                if !id.is_empty() {
+                    return Some(id);
+                }
+            }
+        }
+    }
+    None
 }
 
 /// The build's warnings about the mods' injections (#6490): two mods on one
@@ -1410,6 +1428,83 @@ fn run(mut cmd: Command, what: &str, mut line: impl FnMut(&str)) -> Result<(), S
     }
     let tail: Vec<String> = tail.into();
     Err(failure(what, &status.to_string(), &errors, &tail))
+}
+
+/// A `run_checked` that failed: its error, the last lines of its standard error, and the mods
+/// the compiler's errors were traced to (`id version`).
+struct Ran {
+    error: String,
+    tail: String,
+    owners: Vec<String>,
+}
+
+fn run_checked(
+    mut cmd: Command,
+    what: &str,
+    mut line: impl FnMut(&str),
+    compiler: Option<diagnostics::Compiler<'_>>,
+) -> Result<(), Ran> {
+    let ran = |error: String| Ran {
+        error,
+        tail: String::new(),
+        owners: Vec::new(),
+    };
+    let mut log = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(log_path())
+        .map_err(|e| ran(e.to_string()))?;
+    let _ = writeln!(log, "$ {cmd:?}");
+    let stdout = if compiler.is_some() {
+        cmd.stdout(Stdio::piped());
+        Some(log.try_clone().map_err(|e| ran(e.to_string()))?)
+    } else {
+        cmd.stdout(log.try_clone().map_err(|e| ran(e.to_string()))?);
+        None
+    };
+    let mut child = cmd
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| ran(format!("Could not start {what}: {e}")))?;
+    std::thread::scope(|scope| {
+        let messages = compiler.zip(stdout).map(|(compiler, log)| {
+            let input = BufReader::new(child.stdout.take().expect("piped"));
+            scope.spawn(move || diagnostics::capture(&compiler, input, log))
+        });
+        let mut tail = std::collections::VecDeque::new();
+        let mut errors = Vec::new();
+        for text in BufReader::new(child.stderr.take().expect("piped"))
+            .lines()
+            .map_while(Result::ok)
+        {
+            if let Some(kept) = log_text(&text) {
+                let _ = writeln!(log, "{kept}");
+            }
+            line(&text);
+            if text.starts_with("error") && errors.len() < 4 {
+                errors.push(text.clone());
+            }
+            if tail.len() == 12 {
+                tail.pop_front();
+            }
+            tail.push_back(text);
+        }
+        let status = child.wait().map_err(|e| ran(e.to_string()))?;
+        let messages = messages
+            .map(|m| m.join().expect("compiler output reader"))
+            .unwrap_or_default();
+        if status.success() {
+            return Ok(());
+        }
+        let tail: Vec<String> = tail.into();
+        let owners = messages.owners();
+        let error = messages.explain(failure(what, &status.to_string(), &errors, &tail));
+        Err(Ran {
+            error,
+            tail: tail.join("\n"),
+            owners,
+        })
+    })
 }
 
 /// [`run`]'s error: the `errors` lines not already among the last ones (`tail`), then those.

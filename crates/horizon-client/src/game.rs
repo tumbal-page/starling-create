@@ -224,6 +224,7 @@ mod names;
 mod narrator;
 mod native_biome_colors;
 pub mod native_block_entity_draw;
+pub mod native_world_draw;
 #[cfg(target_os = "android")]
 mod native_builds;
 mod native_claimed_items;

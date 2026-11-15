@@ -881,8 +881,9 @@ use super::{
     native_panel_recipes::RecipePage,
 };
 use horizon_client::mod_api::{
-    self, NativeCamera, NativeCommand, NativeDispensed, NativeLifecycleContext, NativeServerPlayer,
-    RecipeBookCategory, ServerTickPhase, WorldPhase,
+    self, NativeCamera, NativeCommand, NativeDispensed, NativeFluidAction, NativeFluidDrain,
+    NativeFluidStack, NativeFluidTankView, NativeLifecycleContext, NativeServerPlayer,
+    NativeWorldDraw, RecipeBookCategory, ServerTickPhase, WorldPhase,
 };
 use horizon_client::mod_api::{AttachmentResult, Attachments, Holder, Suggestion};
 pub(crate) use horizon_client::mod_api::{
@@ -921,6 +922,7 @@ use horizon_core::{
     ticks::{ScheduleResult, TickPriority},
 };
 use horizon_world::{
+    block_state_properties::BlockProperties,
     consumable::UseAnimation,
     fluid::{FluidKind, FluidState},
     level::{BlockId, LevelAccess, PlacementContext, Ticks},
@@ -1046,7 +1048,7 @@ pub(super) use horizon_world::level::flags;
 /// The hook points' API version. The launcher reads this line from the
 /// source it builds; keep its form.
 #[allow(dead_code)]
-pub(crate) const NATIVE_HOOKS_API: u32 = 359;
+pub(crate) const NATIVE_HOOKS_API: u32 = 645;
 
 impl GameLevel<'_> {
     /// A hopper at `pos` is about to pick up `count` of `item`. Set `cancel` to leave the dropped stack in the world. Server-side. 232.
@@ -1729,6 +1731,130 @@ impl GameLevel<'_> {
         smoke: &mut Option<bool>,
     ) {
         mod_api::dispatch_smoke_source(self, mod_api::mods(), dimension, state, smoke);
+    }
+
+    /// Submit depth-tested world text and textured quads, after particles and
+    /// before the hand/HUD. API 431.
+    pub(super) fn native_world_submit(&self, draw: &mut NativeWorldDraw) {
+        mod_api::dispatch_world_submit(self, mod_api::mods(), draw);
+    }
+
+    /// Opt a mod block into canonical custom fluid storage. API 452.
+    pub(super) fn native_custom_block_fluids(&self, block: &str, custom: &mut bool) {
+        mod_api::dispatch_custom_block_fluids(self, mod_api::mods(), block, custom);
+    }
+
+    /// Read the declared custom fluid tank capability.
+    pub(super) fn native_custom_fluid_tanks(
+        &self,
+        pos: [i32; 3],
+        side: Option<Direction>,
+        out: &mut Option<Vec<NativeFluidTankView>>,
+    ) {
+        mod_api::dispatch_custom_fluid_tanks(self, mod_api::mods(), pos, side, out);
+    }
+
+    /// Fill the declared custom fluid capability, returning the accepted amount.
+    pub(super) fn native_custom_fluid_fill(
+        &mut self,
+        pos: [i32; 3],
+        side: Option<Direction>,
+        resource: &NativeFluidStack,
+        action: NativeFluidAction,
+        out: &mut Option<i32>,
+    ) {
+        mod_api::dispatch_custom_fluid_fill(
+            self,
+            mod_api::mods(),
+            pos,
+            side,
+            resource,
+            action,
+            out,
+        );
+    }
+
+    /// Drain the declared custom fluid capability.
+    pub(super) fn native_custom_fluid_drain(
+        &mut self,
+        pos: [i32; 3],
+        side: Option<Direction>,
+        request: &NativeFluidDrain,
+        action: NativeFluidAction,
+        out: &mut Option<NativeFluidStack>,
+    ) {
+        mod_api::dispatch_custom_fluid_drain(
+            self,
+            mod_api::mods(),
+            pos,
+            side,
+            request,
+            action,
+            out,
+        );
+    }
+
+    /// Opt a non-vanilla block into a state-aware block entity factory. API 572.
+    pub(super) fn native_stateful_block_entity(&self, block: &str, stateful: &mut bool) {
+        mod_api::dispatch_stateful_block_entity(self, mod_api::mods(), block, stateful);
+    }
+
+    /// Create a block entity from block state properties.
+    pub(super) fn native_block_entity_from_state(
+        &self,
+        block: &str,
+        properties: &BlockProperties,
+        entity: &mut Option<(String, Compound)>,
+    ) {
+        mod_api::dispatch_block_entity_from_state(self, mod_api::mods(), block, properties, entity);
+    }
+
+    /// A player interacts with a mob using an item. API 449.
+    pub(super) fn native_item_interact_mob(
+        &mut self,
+        entity: i32,
+        kind: &str,
+        stack: Option<&ItemStack>,
+        swing: &mut Option<bool>,
+    ) {
+        mod_api::dispatch_item_interact_mob(self, mod_api::mods(), entity, kind, stack, swing);
+    }
+
+    /// A block's clone item before Ctrl+Pick adds block-entity components. API 448.
+    pub(super) fn native_block_clone_item(
+        &self,
+        block: &str,
+        pos: [i32; 3],
+        state: BlockStateId,
+        stack: &mut Option<ItemStack>,
+    ) {
+        mod_api::dispatch_block_clone_item(self, mod_api::mods(), block, pos, state, stack);
+    }
+
+    /// A dropped item's vertical move clipped after collision response. API 456.
+    pub(super) fn native_item_after_vertical_collision(
+        &mut self,
+        dimension: &str,
+        client: bool,
+        entity: u32,
+        state: BlockStateId,
+        block_pos: [i32; 3],
+        item_pos: [f64; 3],
+        stack: &mut ItemStack,
+        discard: &mut bool,
+    ) {
+        mod_api::dispatch_item_after_vertical_collision(
+            self,
+            mod_api::mods(),
+            dimension,
+            client,
+            entity,
+            state,
+            block_pos,
+            item_pos,
+            stack,
+            discard,
+        );
     }
 }
 

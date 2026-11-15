@@ -15,6 +15,7 @@ pub use crate::extras_hud::Corners;
 pub use crate::first_person::Hand;
 pub use crate::fog::{FogData, FogType};
 pub use crate::game::native_block_entity_draw::{BlockEntityDraw, CubeFace};
+pub use crate::game::native_world_draw::NativeWorldDraw;
 pub use crate::game::{
     ItemEnergyBuffer, NativeBlockEdit, NativeBlockRun, NativeClock, NativeColumnBlocks,
     NativeDataMapType, NativeExperienceOrb, NativeFalling, NativeHeightmap, NativeHeldItem,
@@ -43,6 +44,7 @@ pub use horizon_world::{
     attachments::{
         AttachmentCodec, AttachmentError, AttachmentHost, AttachmentType, Attachments, Holder,
     },
+    block_state_properties::BlockProperties,
     fluid::FluidState,
     level::{BlockId, Dimension as LevelDimension, PlacementContext},
     loot::{LootStack, NativeLootContext},
@@ -611,6 +613,41 @@ mod generated;
 pub use generated::Hooks;
 #[doc(hidden)]
 pub use generated::*;
+
+/// An owned fluid payload. Component additions and removals are preserved exactly;
+/// the amount is in millibuckets. Empty/negative stacks are not transferable.
+#[derive(Clone, Debug, PartialEq)]
+pub struct NativeFluidStack {
+    pub fluid: String,
+    pub amount: i32,
+    pub components: Compound,
+}
+
+/// A tank exposed by a block's fluid capability, in provider order.
+#[derive(Clone, Debug, PartialEq)]
+pub struct NativeFluidTankView {
+    pub tank: usize,
+    pub content: Option<NativeFluidStack>,
+    pub capacity: i32,
+    pub can_fill: bool,
+    pub can_drain: bool,
+}
+
+/// Simulation is read-only, including dirty flags, synchronization and RNG.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum NativeFluidAction {
+    Simulate,
+    Execute,
+}
+
+/// Maximum-only drain, or a drain matching the full selected fluid payload.
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
+pub enum NativeFluidDrain {
+    Any(i32),
+    Exact(NativeFluidStack),
+}
 
 #[cfg(test)]
 mod tests {

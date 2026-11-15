@@ -2762,6 +2762,7 @@ dependencies = [
  "crc32fast",
  "libc",
  "regex",
+ "rustix",
  "sha1",
  "sha2",
  "zip",

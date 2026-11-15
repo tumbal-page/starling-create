@@ -94,6 +94,9 @@ pub struct Bundle {
     /// Validated relative paths: Rust and TOML, plus files under `mixins/<id>/data/` or a
     /// `data/` folder deeper in (a crate's). A `.hmod`'s content files are not among them.
     pub files: BTreeMap<String, Vec<u8>>,
+    /// Validated top-level content of a combined `.hmod`, including its manifest.
+    /// Legacy `.hnmod` files stay code-only.
+    pub content: BTreeMap<String, Vec<u8>>,
 }
 
 /// Whether `rest` (a path inside `mixins/<id>/`) is a data file: under the bundle's `data/`, or
@@ -124,10 +127,20 @@ pub fn allowed(rest: &str) -> bool {
 }
 
 impl Bundle {
+    /// All original files that affect the build, in path order for stable digests.
+    pub fn source_files(&self) -> BTreeMap<&str, &[u8]> {
+        self.files
+            .iter()
+            .chain(&self.content)
+            .map(|(name, bytes)| (name.as_str(), bytes.as_slice()))
+            .collect()
+    }
+
     pub fn read(path: &Path) -> Result<Self, String> {
         let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
         let mut zip = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
         let mut files = BTreeMap::new();
+        let mut names = std::collections::BTreeSet::new();
         let mut content_id = None;
         let mut total = 0u64;
         for i in 0..zip.len() {
@@ -147,6 +160,9 @@ impl Bundle {
                 || name.contains(':')
             {
                 return Err(format!("invalid native bundle path: {name}"));
+            }
+            if !names.insert(name.clone()) {
+                return Err("duplicate native bundle path".into());
             }
             if name == crate::manifest::WASM {
                 return Err(WASM_GONE.into());
@@ -182,7 +198,7 @@ impl Bundle {
             serde_json::from_slice(files.get(MANIFEST).ok_or("missing horizon-native.json")?)
                 .map_err(|e| e.to_string())?;
         manifest.check()?;
-        if let Some(id) = content_id.filter(|id| *id != manifest.id) {
+        if let Some(id) = content_id.as_ref().filter(|id| **id != manifest.id) {
             return Err(format!(
                 "its {} is mod {id}, its {MANIFEST} {}: one file is one mod",
                 crate::manifest::MANIFEST,
@@ -222,7 +238,30 @@ impl Bundle {
         {
             return Err("native manifest and mixin identity/revision differ".into());
         }
-        Ok(Self { manifest, files })
+        let mut content = BTreeMap::new();
+        if path.extension().is_some_and(|e| e == "hmod") && content_id.is_some() {
+            let package = crate::manifest::Package::read(path)?;
+            let checked = crate::Content::read(path, &package.manifest)?;
+            let mut reader = checked.reader()?;
+            for name in &checked.files {
+                content.insert(name.clone(), reader.read(name)?);
+            }
+            let mut bytes = Vec::new();
+            zip.by_name(crate::manifest::MANIFEST)
+                .map_err(|e| e.to_string())?
+                .take((1 << 20) + 1)
+                .read_to_end(&mut bytes)
+                .map_err(|e| e.to_string())?;
+            if bytes.len() > 1 << 20 {
+                return Err("native content manifest exceeds 1 MiB".into());
+            }
+            content.insert(crate::manifest::MANIFEST.into(), bytes);
+        }
+        Ok(Self {
+            manifest,
+            files,
+            content,
+        })
     }
 
     /// The bundle as the Android build service needs it: its manifest and sources, without the

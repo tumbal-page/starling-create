@@ -25,6 +25,7 @@ PERMISSIONS = {
         r"|AAUDIO_DIRECTION_INPUT|AudioDirection::Input|Direction::Input"
         r"|SL_IID_RECORD|SLRecordItf|CreateAudioRecorder"
         r"|android[/.]media[/.]AudioRecord|android[/.]media[/.]MediaRecorder"
+        r"|sound_engine"
     ),
 }
 

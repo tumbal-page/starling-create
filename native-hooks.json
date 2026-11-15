@@ -4297,6 +4297,99 @@
       "mod_api": {
         "contract": "listen"
       }
+    },
+    {
+      "name": "block_clone_item",
+      "version": 1,
+      "target": "horizon_client::game::native_hooks::Game<'_>::native_block_clone_item",
+      "mod_api": {
+        "contract": "replace",
+        "out": "stack"
+      }
+    },
+    {
+      "name": "custom_block_fluids",
+      "version": 1,
+      "target": "horizon_client::game::native_hooks::Game<'_>::native_custom_block_fluids",
+      "mod_api": {
+        "contract": "listen"
+      }
+    },
+    {
+      "name": "custom_fluid_tanks",
+      "version": 1,
+      "target": "horizon_client::game::native_hooks::Game<'_>::native_custom_fluid_tanks",
+      "mod_api": {
+        "contract": "replace",
+        "out": "out"
+      }
+    },
+    {
+      "name": "custom_fluid_fill",
+      "version": 1,
+      "target": "horizon_client::game::native_hooks::Game<'_>::native_custom_fluid_fill",
+      "mod_api": {
+        "contract": "replace",
+        "out": "out"
+      }
+    },
+    {
+      "name": "custom_fluid_drain",
+      "version": 1,
+      "target": "horizon_client::game::native_hooks::Game<'_>::native_custom_fluid_drain",
+      "mod_api": {
+        "contract": "replace",
+        "out": "out"
+      }
+    },
+    {
+      "name": "item_after_vertical_collision",
+      "version": 1,
+      "target": "horizon_client::game::native_hooks::Game<'_>::native_item_after_vertical_collision",
+      "side": "both",
+      "cancellable": true,
+      "mod_api": {
+        "contract": "cancel",
+        "out": "discard"
+      }
+    },
+    {
+      "name": "item_interact_mob",
+      "version": 1,
+      "target": "horizon_client::game::native_hooks::Game<'_>::native_item_interact_mob",
+      "side": "server",
+      "mod_api": {
+        "contract": "replace",
+        "out": "swing"
+      }
+    },
+    {
+      "name": "stateful_block_entity",
+      "version": 1,
+      "target": "horizon_client::game::native_hooks::Game<'_>::native_stateful_block_entity",
+      "mod_api": {
+        "contract": "listen"
+      }
+    },
+    {
+      "name": "block_entity_from_state",
+      "version": 1,
+      "target": "horizon_client::game::native_hooks::GameLevel<'_>::native_block_entity_from_state",
+      "mod_api": {
+        "contract": "replace",
+        "out": "entity"
+      }
+    },
+    {
+      "name": "world_submit",
+      "version": 1,
+      "target": "horizon_client::game::native_hooks::Game<'_>::native_world_submit",
+      "neoforge": "RenderLevelStageEvent (textured quads and text drawn right after the particles, before the hand)",
+      "side": "client",
+      "cancellable": false,
+      "mod_api": {
+        "contract": "listen"
+      }
     }
   ]
 }
