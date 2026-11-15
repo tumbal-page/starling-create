@@ -4383,7 +4383,7 @@
     {
       "name": "world_submit",
       "version": 1,
-      "target": "horizon_client::game::native_hooks::Game<'_>::native_world_submit",
+      "target": "horizon_client::game::native_hooks::GameLevel<'_>::native_world_submit",
       "neoforge": "RenderLevelStageEvent (textured quads and text drawn right after the particles, before the hand)",
       "side": "client",
       "cancellable": false,
