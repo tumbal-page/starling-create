@@ -271,7 +271,7 @@ target = "horizon_client::game::native_hooks::GameLevel<'_>::native_world_submit
 kind = "HEAD"
 helper = "motor_world.rs"
 bindings = [
-  {name="game",ty="&crate::game::Game<'_>",value="self"},
+  {name="game",ty="&crate::game::GameLevel<'_>",value="self"},
   {name="draw",ty="&mut crate::game::native_world_draw::NativeWorldDraw",value="&mut *draw"},
 ]
 
@@ -755,7 +755,7 @@ target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_fluid
 kind = "HEAD"
 helper = "fluid-custom_fluid_tanks.rs"
 bindings = [
- {name="game",ty="&crate::game::Game<'_>",value="self"},
+ {name="game",ty="&crate::game::GameLevel<'_>",value="self"},
  {name="pos",ty="[i32; 3]",value="pos"},
  {name="side",ty="Option<horizon_core::geometry::Direction>",value="side"},
  {name="out",ty="&mut Option<Vec<crate::mod_api::NativeFluidTankView>>",value="&mut *out"},
@@ -767,7 +767,7 @@ target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_fluid
 kind = "HEAD"
 helper = "fluid-custom_fluid_fill.rs"
 bindings = [
- {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
+ {name="game",ty="&mut crate::game::GameLevel<'_>",value="&mut *self"},
  {name="pos",ty="[i32; 3]",value="pos"},
  {name="side",ty="Option<horizon_core::geometry::Direction>",value="side"},
  {name="resource",ty="&crate::mod_api::NativeFluidStack",value="resource"},
@@ -781,7 +781,7 @@ target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_fluid
 kind = "HEAD"
 helper = "fluid-custom_fluid_drain.rs"
 bindings = [
- {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
+ {name="game",ty="&mut crate::game::GameLevel<'_>",value="&mut *self"},
  {name="pos",ty="[i32; 3]",value="pos"},
  {name="side",ty="Option<horizon_core::geometry::Direction>",value="side"},
  {name="request",ty="&crate::mod_api::NativeFluidDrain",value="request"},
@@ -856,7 +856,7 @@ target="horizon_client::game::native_hooks::GameLevel<'_>::native_item_interact_
 kind="HEAD"
 helper="burner_interact_entity.rs"
 bindings=[
- {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
+ {name="game",ty="&mut crate::game::GameLevel<'_>",value="&mut *self"},
  {name="entity",ty="i32",value="entity"},
  {name="kind",ty="&str",value="kind"},
  {name="swing",ty="&mut Option<bool>",value="&mut *swing"},
@@ -912,7 +912,7 @@ target = "horizon_client::game::native_hooks::GameLevel<'_>::native_block_clone_
 kind = "HEAD"
 helper = "burner_clone_item.rs"
 bindings = [
- {name="game",ty="&crate::game::Game<'_>",value="self"},
+ {name="game",ty="&crate::game::GameLevel<'_>",value="self"},
  {name="pos",ty="[i32; 3]",value="pos"},
  {name="stack",ty="&mut Option<crate::items::ItemStack>",value="&mut *stack"},
 ]
@@ -1020,7 +1020,7 @@ target = "horizon_client::game::native_hooks::GameLevel<'_>::native_item_after_v
 kind = "HEAD"
 helper = "item_after_vertical_collision.rs"
 bindings = [
- {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
+ {name="game",ty="&mut crate::game::GameLevel<'_>",value="&mut *self"},
  {name="dimension",ty="&str",value="dimension"},
  {name="client",ty="bool",value="client"},
  {name="state",ty="horizon_world::registry::BlockStateId",value="state"},
