@@ -91,9 +91,9 @@ bindings = [{ name = "root", ty = "&mut std::path::PathBuf", value = "&mut root"
 
 [[injection]]
 id = "local-assets-reload"
-target = "horizon_client::game::packs::stage_pack"
+target = "horizon_client::game::packs::startup_root"
 kind = "MODIFY_EXPRESSION_VALUE"
-selector = "startup_root"
+selector = "packs::resource_root"
 ordinal = 0
 require = 1
 helper = "assets_root.rs"
