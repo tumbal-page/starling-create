@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Create 6.0.10 SchematicPlacePacket/SchematicPrinter/BlockHelper adapter.
 // Identity transforms, source safe-NBT and explicit supported fixtures only.
-use crate::game::{Game, GameLevel};
+use crate::game::Game;
 use crate::{
     containers::BlockEntity,
     mod_api::{NativeCommand, NativeServerPlayer},
@@ -19,7 +19,7 @@ use horizon_world::{
 use serde_json::{Value, json};
 use std::{collections::BTreeMap, io::Read};
 
-pub(super) fn register(game: &GameLevel<'_>, commands: &mut Vec<NativeCommand>) {
+pub(super) fn register(game: &Game<'_>, commands: &mut Vec<NativeCommand>) {
     if game.native_on("create") {
         commands.push(NativeCommand::op(
             "create schematic inspect <filename:word>",
@@ -33,7 +33,7 @@ pub(super) fn register(game: &GameLevel<'_>, commands: &mut Vec<NativeCommand>) 
 }
 
 struct Registry<'a, 'b> {
-    game: &'a GameLevel<'b>,
+    game: &'a Game<'b>,
 }
 fn supported_vanilla(name: &str) -> bool {
     let Some(name) = name.strip_prefix("minecraft:") else {
@@ -134,7 +134,7 @@ fn vanilla_entity(name: &str) -> Option<&'static str> {
 }
 impl Registry<'_, '_> {
     fn id(&self, state: &BlockState) -> Result<BlockStateId, String> {
-        let registry = self.game.registry;
+        let registry = self.game.pack.assets.registry;
         let default = registry
             .default_state(&state.name)
             .ok_or_else(|| format!("unknown block {}", state.name))?;
@@ -311,7 +311,7 @@ impl Resolver for Registry<'_, '_> {
                 .map(str::to_owned),
             );
             Some(schema)
-        } else if self.game.facts.get(id).block_entity
+        } else if self.game.res.facts().get(id).block_entity
             || BlockEntity::for_block(&state.name).is_some()
         {
             return Err(format!(
@@ -472,7 +472,7 @@ fn read_file(filename: &str) -> Result<Vec<u8>, String> {
 fn failure(message: impl Into<String>) -> Value {
     json!({"ok":false,"issues":[{"path":"command","message":message.into()}],"notes":[],"blocks":0,"skipped_air":0})
 }
-fn reply(game: &mut GameLevel<'_>, report: Value) {
+fn reply(game: &mut Game<'_>, report: Value) {
     game.native_feedback(horizon_client::text::Text::literal(report.to_string()));
 }
 
@@ -483,7 +483,7 @@ struct Write {
     old: BlockStateId,
     old_entity: Option<BlockEntity>,
 }
-fn destination(game: &GameLevel<'_>, plan: &Plan, origin: [i32; 3]) -> Result<Vec<Write>, Value> {
+fn destination(game: &Game<'_>, plan: &Plan, origin: [i32; 3]) -> Result<Vec<Write>, Value> {
     let registry = Registry { game };
     let (min_y, height) = game.native_world_height();
     let mut writes = Vec::new();
@@ -563,7 +563,7 @@ fn destination(game: &GameLevel<'_>, plan: &Plan, origin: [i32; 3]) -> Result<Ve
 }
 
 pub(super) fn command(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     player: &NativeServerPlayer,
     line: &str,
     ran: &mut bool,

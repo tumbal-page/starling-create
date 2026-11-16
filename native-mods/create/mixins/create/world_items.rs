@@ -2,10 +2,9 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // SharedDepotBlockMethods.onLanded and MechanicalPressBlockEntity world input.
-use crate::game::GameLevel;
-use super::Game;
+use crate::game::Game;
 use crate::{containers::ModBlockEntity, items::ItemStack};
-pub(super) fn catch(game: &mut GameLevel<'_>, pos: [i32; 3], entity: &mut ModBlockEntity) {
+pub(super) fn catch(game: &mut Game<'_>, pos: [i32; 3], entity: &mut ModBlockEntity) {
     if entity.items.iter().any(Option::is_some) {
         return;
     }
@@ -51,7 +50,7 @@ pub(super) struct Input {
     pub position: [f64; 3],
     pub stack: ItemStack,
 }
-pub(super) fn inputs(game: &GameLevel<'_>, press: [i32; 3]) -> Vec<Input> {
+pub(super) fn inputs(game: &Game<'_>, press: [i32; 3]) -> Vec<Input> {
     let min = [
         f64::from(press[0]),
         f64::from(press[1] - 1),
@@ -67,7 +66,7 @@ pub(super) fn inputs(game: &GameLevel<'_>, press: [i32; 3]) -> Vec<Input> {
         })
         .collect()
 }
-pub(super) fn press(game: &mut GameLevel<'_>, input: Input, output: ItemStack) {
+pub(super) fn press(game: &mut Game<'_>, input: Input, output: ItemStack) {
     let dim = game.dim.id().to_owned();
     if !game
         .dropped

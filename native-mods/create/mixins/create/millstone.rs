@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 // MillstoneBlock/BlockEntity: processing, filtered capability, falling items,
 // empty-hand collection and original NBT. No vanilla container screen is used.
-use crate::game::GameLevel;
+use crate::game::Game;
 use super::{native_block_entity_draw::BlockEntityDraw};
 use crate::{
     containers::{ModBlockEntity, ModContainer},
@@ -51,7 +51,7 @@ pub(super) fn invalidate_recipes() {
     });
 }
 
-pub(super) fn refresh_recipes(game: &GameLevel<'_>) {
+pub(super) fn refresh_recipes(game: &Game<'_>) {
     INPUTS.with(|cache| {
         let mut cache = cache.borrow_mut();
         let stamp = (std::ptr::from_ref(game) as usize, game.world.game_time);
@@ -97,7 +97,7 @@ pub(super) fn automation_accepts(stack: &ItemStack) -> bool {
 
 /// MillstoneInventoryHandler.canProcess: evaluate the current compiled
 /// ingredient predicate, without changing the processing cycle's last recipe.
-pub(super) fn can_process(game: &GameLevel<'_>, stack: &ItemStack) -> bool {
+pub(super) fn can_process(game: &Game<'_>, stack: &ItemStack) -> bool {
     refresh_recipes(game);
     stack.count > 0
         && INPUTS.with(|cache| {
@@ -120,7 +120,7 @@ struct CompiledRecipe {
     recipe: Recipe,
 }
 
-fn compile_recipe(game: &GameLevel<'_>, json: &serde_json::Value) -> Option<CompiledRecipe> {
+fn compile_recipe(game: &Game<'_>, json: &serde_json::Value) -> Option<CompiledRecipe> {
     let input = json["ingredients"]
         .as_array()
         .and_then(|a| a.first())
@@ -157,7 +157,7 @@ pub(super) fn forget(pos: [i32; 3]) {
     INPUTS.with(|cache| cache.borrow_mut().last.retain(|(_, p), _| *p != pos));
 }
 
-fn recipe(game: &GameLevel<'_>, pos: [i32; 3], stack: &ItemStack) -> Option<Recipe> {
+fn recipe(game: &Game<'_>, pos: [i32; 3], stack: &ItemStack) -> Option<Recipe> {
     INPUTS.with(|cache| {
         let mut cache = cache.borrow_mut();
         let key = (game.dim.id().to_owned(), pos);
@@ -234,13 +234,13 @@ pub(super) fn data(entity: &mut ModBlockEntity) -> bool {
     changed
 }
 
-fn max_stack(game: &GameLevel<'_>, stack: &ItemStack) -> u32 {
+fn max_stack(game: &Game<'_>, stack: &ItemStack) -> u32 {
     super::create_port::stack_maximum(game, stack)
 }
 
 /// Called after the kinetic network has resolved the current signed RPM.
 pub(super) fn tick(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: [i32; 3],
     entity: &mut ModBlockEntity,
     rpm: f32,
@@ -309,7 +309,7 @@ pub(super) fn tick(
     inventory_changed || matches!(action, Action::Armed | Action::Process)
 }
 
-pub(super) fn reacts(game: &GameLevel<'_>, pos: [i32; 3]) -> bool {
+pub(super) fn reacts(game: &Game<'_>, pos: [i32; 3]) -> bool {
     game.native_on("create")
         && game.native_block(pos) == ID
         && game
@@ -317,7 +317,7 @@ pub(super) fn reacts(game: &GameLevel<'_>, pos: [i32; 3]) -> bool {
             .is_none_or(|s| s.count == 0 || s.item.as_ref() == "minecraft:air")
 }
 
-pub(super) fn right_click(game: &mut GameLevel<'_>, pos: [i32; 3]) -> bool {
+pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3]) -> bool {
     if crate::game::create_port::inventory_blocked(game, pos) {
         return true;
     }
@@ -365,7 +365,7 @@ pub(super) fn right_click(game: &mut GameLevel<'_>, pos: [i32; 3]) -> bool {
 }
 
 pub(super) fn draw(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     pos: [i32; 3],
     entity: &ModBlockEntity,
     draw: &mut BlockEntityDraw,
@@ -391,7 +391,7 @@ pub(super) fn draw(
 
 /// Client-only counterpart of spawnParticles. Run once per client game tick,
 /// rather than per rendered frame, so frame rate never changes particle rate.
-pub(super) fn client_tick(game: &mut GameLevel<'_>) {
+pub(super) fn client_tick(game: &mut Game<'_>) {
     if !game.native_window() || !game.native_on("create") {
         return;
     }

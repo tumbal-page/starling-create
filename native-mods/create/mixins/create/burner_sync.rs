@@ -1,8 +1,8 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Server-derived client fuel definitions, independent of resource-pack guesses.
-use crate::game::GameLevel;
-use super::{Game, create_port_burner_sync_protocol as wire};
+use crate::game::Game;
+use super::create_port_burner_sync_protocol as wire;
 use crate::items::ItemStack;
 use create_engine::burner::Candidate;
 use std::{
@@ -58,7 +58,7 @@ thread_local! {
     static SERVERS: RefCell<HashMap<usize,Server>> = RefCell::new(HashMap::new());
     static CLIENTS: RefCell<HashMap<usize,Client>> = RefCell::new(HashMap::new());
 }
-fn id(game: &GameLevel<'_>) -> usize {
+fn id(game: &Game<'_>) -> usize {
     std::ptr::from_ref(game) as usize
 }
 fn full_id(name: &str) -> String {
@@ -68,7 +68,7 @@ fn full_id(name: &str) -> String {
         format!("minecraft:{name}")
     }
 }
-fn snapshot(game: &GameLevel<'_>) -> Result<wire::Snapshot, String> {
+fn snapshot(game: &Game<'_>) -> Result<wire::Snapshot, String> {
     let map = |name| {
         game.native_data_map_entries("minecraft:item", name)
             .into_iter()
@@ -121,12 +121,12 @@ fn snapshot(game: &GameLevel<'_>) -> Result<wire::Snapshot, String> {
             .collect(),
     })
 }
-fn ready(game: &GameLevel<'_>) -> bool {
+fn ready(game: &Game<'_>) -> bool {
     game.remote.is_none()
         && game.session_lock.is_some()
         && (game.serving.is_some() || game.options.dedicated.is_some())
 }
-fn compile(game: &GameLevel<'_>) -> bool {
+fn compile(game: &Game<'_>) -> bool {
     if !ready(game) {
         return false;
     }
@@ -149,7 +149,7 @@ fn compile(game: &GameLevel<'_>) -> bool {
     });
     true
 }
-fn queue(game: &GameLevel<'_>, player: u128) {
+fn queue(game: &Game<'_>, player: u128) {
     let pointer = id(game);
     let now = game.ticks;
     SERVERS.with(|s| {
@@ -178,7 +178,7 @@ fn queue(game: &GameLevel<'_>, player: u128) {
     });
 }
 /// Cold cache is rebuilt once per server generation, never in a click handler.
-pub(super) fn data_loaded(game: &mut GameLevel<'_>, reload: bool) {
+pub(super) fn data_loaded(game: &mut Game<'_>, reload: bool) {
     let pointer = id(game);
     SERVERS.with(|s| {
         let mut servers = s.borrow_mut();
@@ -198,11 +198,11 @@ pub(super) fn data_loaded(game: &mut GameLevel<'_>, reload: bool) {
         queue(game, player.uuid);
     }
 }
-pub(super) fn logged_in(game: &mut GameLevel<'_>, player: u128) {
+pub(super) fn logged_in(game: &mut Game<'_>, player: u128) {
     compile(game);
     queue(game, player);
 }
-pub(super) fn logged_out(game: &GameLevel<'_>, player: u128) {
+pub(super) fn logged_out(game: &Game<'_>, player: u128) {
     SERVERS.with(|s| {
         if let Some(state) = s.borrow_mut().get_mut(&id(game)) {
             state.pending.remove(&player);
@@ -210,7 +210,7 @@ pub(super) fn logged_out(game: &GameLevel<'_>, player: u128) {
         }
     });
 }
-pub(super) fn clear(game: &GameLevel<'_>) {
+pub(super) fn clear(game: &Game<'_>) {
     // A replacement dimension installs heard_level before unloading the old
     // level. Definitions belong to the connection, rather than that dimension.
     if !game.create_burner_sync_has_level() {
@@ -222,7 +222,7 @@ pub(super) fn clear(game: &GameLevel<'_>) {
         s.borrow_mut().remove(&id(game));
     });
 }
-pub(super) fn from_client(game: &mut GameLevel<'_>, player: u128, channel: &str, data: &[u8]) {
+pub(super) fn from_client(game: &mut Game<'_>, player: u128, channel: &str, data: &[u8]) {
     if channel != REQUEST
         || data != wire::REQUEST
         || !game.native_on("create")
@@ -236,7 +236,7 @@ pub(super) fn from_client(game: &mut GameLevel<'_>, player: u128, channel: &str,
     compile(game);
     queue(game, player);
 }
-pub(super) fn from_server(game: &GameLevel<'_>, channel: &str, data: &[u8]) {
+pub(super) fn from_server(game: &Game<'_>, channel: &str, data: &[u8]) {
     if channel != DATA || game.remote.is_none() || !game.native_on("create") {
         return;
     }
@@ -248,7 +248,7 @@ pub(super) fn from_server(game: &GameLevel<'_>, channel: &str, data: &[u8]) {
         }
     });
 }
-pub(super) fn tick(game: &mut GameLevel<'_>) {
+pub(super) fn tick(game: &mut Game<'_>) {
     if !game.native_on("create") {
         return;
     }
@@ -315,7 +315,7 @@ pub(super) fn tick(game: &mut GameLevel<'_>) {
         });
     }
 }
-pub(super) fn candidate(game: &GameLevel<'_>, stack: &ItemStack) -> Option<Candidate> {
+pub(super) fn candidate(game: &Game<'_>, stack: &ItemStack) -> Option<Candidate> {
     CLIENTS.with(|s| {
         let clients = s.borrow();
         let data = &clients.get(&id(game))?.receiver.active.as_ref()?.1;
@@ -329,7 +329,7 @@ pub(super) fn candidate(game: &GameLevel<'_>, stack: &ItemStack) -> Option<Candi
         ))
     })
 }
-pub(super) fn capturable(game: &GameLevel<'_>, kind: &str) -> Option<bool> {
+pub(super) fn capturable(game: &Game<'_>, kind: &str) -> Option<bool> {
     CLIENTS.with(|s| {
         let clients = s.borrow();
         let data = &clients.get(&id(game))?.receiver.active.as_ref()?.1;

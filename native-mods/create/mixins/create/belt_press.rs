@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 // BeltPressingCallbacks adapter, pinned Create6.0.10. Ordinary pressing recipes
 // and default bulkPressing=false; no sequenced-assembly or basin compression.
-use crate::game::GameLevel;
+use crate::game::Game;
 use super::{Game, create_port as port, create_port_belt as belt};
 use crate::{containers::BlockEntity, items::ItemStack};
 use create_engine::{
@@ -28,12 +28,12 @@ fn decision(value: BeltDecision) -> ProcessingResult {
         BeltDecision::Hold => ProcessingResult::Hold,
     }
 }
-pub(super) fn available(game: &GameLevel<'_>, pos: Pos) -> bool {
+pub(super) fn available(game: &Game<'_>, pos: Pos) -> bool {
     game.native_block(pos) == "create:mechanical_press"
         && matches!(game.world.block_entities.get(&(pos[0],pos[1],pos[2])),
             Some(BlockEntity::Mod(e)) if e.id == "create:mechanical_press")
 }
-fn state(game: &GameLevel<'_>, pos: Pos) -> Option<BeltPressState> {
+fn state(game: &Game<'_>, pos: Pos) -> Option<BeltPressState> {
     if !available(game, pos) {
         return None;
     }
@@ -48,7 +48,7 @@ fn state(game: &GameLevel<'_>, pos: Pos) -> Option<BeltPressState> {
     })
 }
 pub(super) fn received(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: Pos,
     item: &mut Transported<ItemStack>,
 ) -> ProcessingUpdate<ItemStack> {
@@ -117,7 +117,7 @@ impl BeltPressContext<ItemStack> for Context<'_, '_> {
     }
 }
 pub(super) fn held(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: Pos,
     item: &mut Transported<ItemStack>,
 ) -> ProcessingUpdate<ItemStack> {

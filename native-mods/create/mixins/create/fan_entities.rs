@@ -4,8 +4,7 @@
 // AirCurrent entity motion and AllFanProcessingTypes server entity effects.
 // Player force runs on its client; the server applies hazards and clears fall
 // bookkeeping. Sending an additional server impulse would apply the force twice.
-use crate::game::GameLevel;
-use super::Game;
+use crate::game::Game;
 use crate::game::commands::Target;
 use create_engine::{
     fan::{self, ProcessingType, Segment},
@@ -65,7 +64,7 @@ pub(super) fn clear(dimension: &str, origin: [i32; 3]) {
         c.client.remove(&(dimension.into(), origin));
     });
 }
-pub(super) fn maintenance(game: &GameLevel<'_>) {
+pub(super) fn maintenance(game: &Game<'_>) {
     CACHE.with(|c| {
         let mut c = c.borrow_mut();
         prepare(&mut c, game);
@@ -83,7 +82,7 @@ pub(super) fn maintenance(game: &GameLevel<'_>) {
         }
     });
 }
-fn prepare(cache: &mut Cache, game: &GameLevel<'_>) {
+fn prepare(cache: &mut Cache, game: &Game<'_>) {
     let id = std::ptr::from_ref(game) as usize;
     if cache.game != Some(id) {
         *cache = Cache {
@@ -114,7 +113,7 @@ fn cells(bounds: [[f64; 3]; 2]) -> impl Iterator<Item = [i32; 2]> {
     let max = bounds[1].map(|v| (v.floor() as i32) >> 4);
     (min[0]..=max[0]).flat_map(move |x| (min[2]..=max[2]).map(move |z| [x, z]))
 }
-fn index(cache: &mut Cache, game: &GameLevel<'_>) {
+fn index(cache: &mut Cache, game: &Game<'_>) {
     let stamp = (game.dim.id().to_owned(), game.world.game_time);
     if cache.index.stamp.as_ref() == Some(&stamp) {
         return;
@@ -159,7 +158,7 @@ fn flow(facing: Direction, rpm: f32) -> [i32; 3] {
 }
 
 pub(super) fn server_tick(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     origin: [i32; 3],
     facing: Direction,
     rpm: f32,
@@ -284,7 +283,7 @@ pub(super) fn server_tick(
 }
 
 pub(super) fn client_tick(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     origin: [i32; 3],
     facing: Direction,
     rpm: f32,
@@ -345,7 +344,7 @@ pub(super) fn client_tick(
     }
 }
 
-fn affect_player(game: &mut GameLevel<'_>, kind: ProcessingType) {
+fn affect_player(game: &mut Game<'_>, kind: ProcessingType) {
     let facts = Facts {
         living: true,
         on_fire: game.player.as_ref().is_some_and(|p| p.fire_ticks > 0),
@@ -386,7 +385,7 @@ fn affect_player(game: &mut GameLevel<'_>, kind: ProcessingType) {
         );
     }
 }
-fn horse_progress(game: &GameLevel<'_>, id: u32) -> i32 {
+fn horse_progress(game: &Game<'_>, id: u32) -> i32 {
     game.persist
         .raw
         .get(&id)
@@ -395,7 +394,7 @@ fn horse_progress(game: &GameLevel<'_>, id: u32) -> i32 {
         .and_then(|t| if let Tag::Int(v) = t { Some(*v) } else { None })
         .unwrap_or(0)
 }
-fn store_horse_progress(game: &mut GameLevel<'_>, id: u32, progress: i32) {
+fn store_horse_progress(game: &mut Game<'_>, id: u32, progress: i32) {
     let root = game
         .persist
         .raw
@@ -411,7 +410,7 @@ fn store_horse_progress(game: &mut GameLevel<'_>, id: u32, progress: i32) {
         data.insert("CreateHaunting".into(), Tag::Int(progress));
     }
 }
-fn affect_mob(game: &mut GameLevel<'_>, index: usize, kind: ProcessingType) {
+fn affect_mob(game: &mut Game<'_>, index: usize, kind: ProcessingType) {
     let mob = &game.mobs[index];
     let id = mob.id;
     let facts = Facts {
@@ -478,7 +477,7 @@ fn affect_mob(game: &mut GameLevel<'_>, index: usize, kind: ProcessingType) {
         Horse::None => {}
     }
 }
-fn damage_kind(game: &GameLevel<'_>, damage: DamageType) -> DamageKind {
+fn damage_kind(game: &Game<'_>, damage: DamageType) -> DamageKind {
     if damage == DamageType::Drown {
         return DamageKind::Drown;
     }
@@ -516,12 +515,12 @@ fn damage_kind(game: &GameLevel<'_>, damage: DamageType) -> DamageKind {
     CACHE.with(|cache| cache.borrow_mut().damage_flags.insert(damage.id(), flags));
     DamageKind::Named(NamedDamage::new(damage.id(), flags))
 }
-fn sound(game: &mut GameLevel<'_>, id: &str, at: [f64; 3], volume: f32, pitch: f32) {
+fn sound(game: &mut Game<'_>, id: &str, at: [f64; 3], volume: f32, pitch: f32) {
     // AllFanProcessingTypes calls the BlockPos overload of Level.playSound.
     let center = at.map(|v| v.floor() + 0.5);
     game.with_level(|_, level, _| level.native_play_sound(id, center, 6, volume, pitch));
 }
-fn convert_horse(game: &mut GameLevel<'_>, id: u32, at: [f64; 3]) {
+fn convert_horse(game: &mut Game<'_>, id: u32, at: [f64; 3]) {
     let Some(entity) = game.native_entity(id) else {
         return;
     };

@@ -2,8 +2,8 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Stationary DrillBlockEntity and BlockBreakingKineticBlockEntity adapter.
-use crate::game::GameLevel;
-use super::{Game, native_block_entity_draw::BlockEntityDraw};
+use crate::game::Game;
+use super::native_block_entity_draw::BlockEntityDraw;
 use crate::containers::ModBlockEntity;
 use create_engine::{
     drilling::{Action, DrillCycle},
@@ -81,7 +81,7 @@ pub(super) fn changed(dimension: &str, pos: [i32; 3]) {
 
 /// Clear destroyed or unloaded drill cracks once per server tick. This also
 /// bounds transient state without scanning every drill for every drill tick.
-pub(super) fn maintenance(game: &mut GameLevel<'_>) {
+pub(super) fn maintenance(game: &mut Game<'_>) {
     let removed = STATE.with(|state| {
         let mut state = state.borrow_mut();
         let state = state.dimension(std::ptr::from_ref(game) as usize, game.dim.id());
@@ -106,7 +106,7 @@ pub(super) fn maintenance(game: &mut GameLevel<'_>) {
     }
 }
 
-fn facing(game: &GameLevel<'_>, pos: [i32; 3]) -> Direction {
+fn facing(game: &Game<'_>, pos: [i32; 3]) -> Direction {
     let name = game.native_block_property(pos, "facing");
     Direction::ALL
         .into_iter()
@@ -114,7 +114,7 @@ fn facing(game: &GameLevel<'_>, pos: [i32; 3]) -> Direction {
         .unwrap_or(Direction::North)
 }
 
-fn crack(game: &mut GameLevel<'_>, breaker: i32, target: [i32; 3], progress: i32) {
+fn crack(game: &mut Game<'_>, breaker: i32, target: [i32; 3], progress: i32) {
     game.destroy_block_progress(breaker, target, progress);
     if let Some(host) = game.lan.as_ref() {
         host.hub.broadcast_near(
@@ -132,7 +132,7 @@ fn crack(game: &mut GameLevel<'_>, breaker: i32, target: [i32; 3], progress: i32
 
 /// Called after the network has written effective RPM, including overstress.
 pub(super) fn tick(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: [i32; 3],
     entity: &mut ModBlockEntity,
     rpm: f32,
@@ -237,7 +237,7 @@ pub(super) fn tick(
 }
 
 pub(super) fn draw(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     pos: [i32; 3],
     entity: &ModBlockEntity,
     draw: &mut BlockEntityDraw,

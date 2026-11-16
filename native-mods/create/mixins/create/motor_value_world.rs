@@ -4,7 +4,7 @@
 // Create 6.0.10 ScrollValueRenderer, ValueBox.TextValueBox,
 // ValueBoxTransform.Sided, CreativeMotorBlockEntity.MotorValueBox, AllIcons;
 // bundled MIT Catnip Outliner/OutlineEntry. No original asset bytes.
-use crate::game::GameLevel;
+use crate::game::Game;
 use super::{native_world_draw::NativeWorldDraw};
 use crate::containers::BlockEntity;
 use horizon_world::nbt::Tag;
@@ -167,7 +167,7 @@ pub(super) trait Canvas {
     );
     fn text(&mut self, draw: &mut NativeWorldDraw, text: &str, color: u32, outline: u32);
 }
-struct NativeCanvas<'a, 'g>(&'a GameLevel<'g>);
+struct NativeCanvas<'a, 'g>(&'a Game<'g>);
 impl Canvas for NativeCanvas<'_, '_> {
     fn quad(
         &mut self,
@@ -199,7 +199,7 @@ impl Canvas for NativeCanvas<'_, '_> {
         );
     }
 }
-pub(super) fn render(game: &GameLevel<'_>, draw: &mut NativeWorldDraw) {
+pub(super) fn render(game: &Game<'_>, draw: &mut NativeWorldDraw) {
     let mut canvas = NativeCanvas(game);
     for plan in plans(game) {
         draw.push();
@@ -217,7 +217,7 @@ struct State {
     boxes: HashMap<[i32; 3], Plan>,
 }
 thread_local! {static STATE: RefCell<State> = RefCell::new(State::default());}
-fn identity(game: &GameLevel<'_>) -> (usize, usize, &'static str) {
+fn identity(game: &Game<'_>) -> (usize, usize, &'static str) {
     (
         std::ptr::from_ref(game) as usize,
         std::ptr::from_ref(&game.world) as usize,
@@ -225,7 +225,7 @@ fn identity(game: &GameLevel<'_>) -> (usize, usize, &'static str) {
     )
 }
 
-fn target(game: &GameLevel<'_>) -> Option<Plan> {
+fn target(game: &Game<'_>) -> Option<Plan> {
     let hit = game.pick()?;
     if game.native_block(hit.pos) != "create:creative_motor"
         || [
@@ -270,7 +270,7 @@ fn target(game: &GameLevel<'_>) -> Option<Plan> {
 
 /// Once per unpaused real client tick: Ponder ticks old outlines in Pre, then
 /// Create's ScrollValueRenderer replaces the current entry in Post.
-pub(super) fn tick(game: &GameLevel<'_>) {
+pub(super) fn tick(game: &Game<'_>) {
     if !game.native_window() || !game.native_on("create") || game.player.is_none() {
         reset();
         return;
@@ -298,7 +298,7 @@ pub(super) fn reset() {
 
 /// Source goggles suppression checks alive active entries, including entries
 /// whose world rendering has already reached the fade cutoff.
-pub(super) fn active(game: &GameLevel<'_>) -> bool {
+pub(super) fn active(game: &Game<'_>) -> bool {
     STATE.with_borrow(|state| {
         state.identity == identity(game) && state.boxes.values().any(|plan| plan.active)
     })
@@ -306,7 +306,7 @@ pub(super) fn active(game: &GameLevel<'_>) -> bool {
 
 /// A world pass must also draw cached entries after a motor is removed; a block
 /// entity submit callback alone does not cover that source Outliner behavior.
-pub(super) fn plans(game: &GameLevel<'_>) -> Vec<Plan> {
+pub(super) fn plans(game: &Game<'_>) -> Vec<Plan> {
     STATE.with_borrow(|state| {
         if state.identity == identity(game) {
             state.boxes.values().cloned().collect()

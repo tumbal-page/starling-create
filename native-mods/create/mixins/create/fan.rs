@@ -2,8 +2,8 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // AirCurrent / FanProcessing adapter. No item components are used as entity data.
-use crate::game::GameLevel;
-use super::{Game, native_block_entity_draw::BlockEntityDraw};
+use crate::game::Game;
+use super::native_block_entity_draw::BlockEntityDraw;
 use crate::{containers::ModBlockEntity, items::ItemStack};
 use create_engine::{
     fan::{self, Processing, ProcessingType as Type, Segment},
@@ -72,7 +72,7 @@ pub(super) fn changed(dimension: &str, pos: [i32; 3]) {
         }
     });
 }
-pub(super) fn maintenance(game: &GameLevel<'_>) {
+pub(super) fn maintenance(game: &Game<'_>) {
     super::create_port_fan_entities::maintenance(game);
     CACHE.with(|cache| {
         let mut cache = cache.borrow_mut();
@@ -90,7 +90,7 @@ pub(super) fn maintenance(game: &GameLevel<'_>) {
         });
     });
 }
-fn facing(game: &GameLevel<'_>, pos: [i32; 3]) -> Direction {
+fn facing(game: &Game<'_>, pos: [i32; 3]) -> Direction {
     let value = game.native_block_property(pos, "facing");
     Direction::ALL
         .into_iter()
@@ -101,14 +101,14 @@ fn add(pos: [i32; 3], d: Direction, n: i32) -> [i32; 3] {
     let v = d.vector();
     std::array::from_fn(|i| pos[i] + v[i] * n)
 }
-fn block_tag(game: &GameLevel<'_>, pos: [i32; 3], tag: &str) -> bool {
+fn block_tag(game: &Game<'_>, pos: [i32; 3], tag: &str) -> bool {
     game.pack
         .assets
         .registry
         .state(game.world.block(pos[0], pos[1], pos[2]))
         .is_some_and(|s| game.native_server_block_in_tag(s, tag).unwrap_or(false))
 }
-fn media(game: &GameLevel<'_>, pos: [i32; 3]) -> Option<Type> {
+fn media(game: &Game<'_>, pos: [i32; 3]) -> Option<Type> {
     let name = game.native_block(pos);
     let water = name == "minecraft:water"
         || name == "minecraft:bubble_column"
@@ -136,7 +136,7 @@ fn media(game: &GameLevel<'_>, pos: [i32; 3]) -> Option<Type> {
     .processing()
 }
 
-fn flow_limit(game: &GameLevel<'_>, pos: [i32; 3], d: Direction, max: f32) -> f32 {
+fn flow_limit(game: &Game<'_>, pos: [i32; 3], d: Direction, max: f32) -> f32 {
     for i in 0..max.ceil() as i32 {
         let p = add(pos, d, i + 1);
         if !game.world.loaded(p[0], p[2]) {
@@ -172,7 +172,7 @@ fn bounds(pos: [i32; 3], d: Direction, distance: f32) -> ([f64; 3], [f64; 3]) {
     }
     (min, max)
 }
-fn refresh(game: &GameLevel<'_>) {
+fn refresh(game: &Game<'_>) {
     CACHE.with(|cache| {
         let mut cache = cache.borrow_mut();
         if cache.recipes_ready {
@@ -257,7 +257,7 @@ fn blasting_fire_resistance(stack: &ItemStack, prototype: bool) -> Option<bool> 
         _ => None,
     }
 }
-fn plan(game: &GameLevel<'_>, stack: &ItemStack, kind: Type) -> Option<Vec<(ItemStack, f32)>> {
+fn plan(game: &Game<'_>, stack: &ItemStack, kind: Type) -> Option<Vec<(ItemStack, f32)>> {
     match kind {
         Type::Haunting | Type::Splashing => CACHE.with(|cache| {
             cache
@@ -308,7 +308,7 @@ fn plan(game: &GameLevel<'_>, stack: &ItemStack, kind: Type) -> Option<Vec<(Item
     }
 }
 fn roll(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     stack: &ItemStack,
     outputs: &[(ItemStack, f32)],
     remainder: bool,
@@ -352,7 +352,7 @@ fn held_state(nbt: &Compound) -> Processing {
         time: super::create_port::integer(nbt, "FanProcessingTime"),
     }
 }
-fn dropped_state(game: &GameLevel<'_>, id: u32) -> Processing {
+fn dropped_state(game: &Game<'_>, id: u32) -> Processing {
     let tag = game
         .persist
         .raw
@@ -372,7 +372,7 @@ fn dropped_state(game: &GameLevel<'_>, id: u32) -> Processing {
         time: super::create_port::integer(tag, "Time"),
     }
 }
-fn store_dropped(game: &mut GameLevel<'_>, id: u32, state: Processing) {
+fn store_dropped(game: &mut Game<'_>, id: u32, state: Processing) {
     let Some(kind) = state.kind else {
         return;
     };
@@ -409,7 +409,7 @@ fn store_held(nbt: &mut Compound, state: Processing) {
         nbt.insert("FanProcessingTime".into(), Tag::Int(state.time));
     }
 }
-fn process_depot(game: &mut GameLevel<'_>, pos: [i32; 3], kind: Type) {
+fn process_depot(game: &mut Game<'_>, pos: [i32; 3], kind: Type) {
     if super::create_port::inventory_blocked(game, pos) {
         return;
     }
@@ -497,9 +497,7 @@ impl fan::TransportedContext<ItemStack> for BeltContext<'_, '_> {
         stack: &create_engine::transport::Stack<ItemStack>,
         kind: Type,
     ) -> bool {
-        self.game.with_level(|_, level, _| {
-            plan(level, &super::create_port_belt::game_stack(stack), kind).is_some()
-        })
+        plan(self.game, &super::create_port_belt::game_stack(stack), kind).is_some()
     }
     fn process(
         &mut self,
@@ -507,32 +505,19 @@ impl fan::TransportedContext<ItemStack> for BeltContext<'_, '_> {
         kind: Type,
     ) -> Option<Vec<create_engine::transport::Stack<ItemStack>>> {
         let input = super::create_port_belt::game_stack(stack);
-        let outputs = self.game.with_level(|_, level, _| {
-            plan(level, &input, kind)
-        })?;
+        let outputs = plan(self.game, &input, kind)?;
         Some(
-            self.game.with_level(|_, level, _| {
-                roll(
-                    level,
-                    &input,
-                    &outputs,
-                    matches!(kind, Type::Splashing | Type::Haunting),
-                )
-            })
-            .into_iter()
-            .map(|output| self.game.with_level(|_, level, _| {
-                super::create_port_belt::core_stack(level, output)
-            }))
-            .collect(),
+            roll(self.game, &input, &outputs, matches!(kind, Type::Splashing | Type::Haunting))
+                .into_iter()
+                .map(|output| super::create_port_belt::core_stack(self.game, output))
+                .collect(),
         )
     }
     fn similar_angle(&mut self, input: &create_engine::transport::Stack<ItemStack>) -> i32 {
-        self.game.with_level(|_, level, _| {
-            super::create_port_belt::angle(level, &input.payload)
-        })
+        super::create_port_belt::angle(self.game, &input.payload)
     }
 }
-fn process_belt(game: &mut GameLevel<'_>, pos: [i32; 3], kind: Type) {
+fn process_belt(game: &mut Game<'_>, pos: [i32; 3], kind: Type) {
     // AirCurrent uses handleProcessingOnAllItems(.51f). The belt can be stopped:
     // processing is owned by the active fan, independently of belt movement.
     super::create_port_belt::apply_to_each_within(game, pos, 0.51, |game, item| {
@@ -543,7 +528,7 @@ fn process_belt(game: &mut GameLevel<'_>, pos: [i32; 3], kind: Type) {
         ))
     });
 }
-pub(super) fn tick(game: &mut GameLevel<'_>, pos: [i32; 3], entity: &mut ModBlockEntity, rpm: f32) {
+pub(super) fn tick(game: &mut Game<'_>, pos: [i32; 3], entity: &mut ModBlockEntity, rpm: f32) {
     refresh(game);
     let dim = game.dim.id().to_owned();
     let key = (dim.clone(), pos);
@@ -841,7 +826,7 @@ pub(super) fn synced_current(entity: &ModBlockEntity) -> Option<SyncedCurrent> {
 /// Clients consume only validated authoritative flow. An absent/stale payload
 /// applies no force; neither thread-local server state nor default client tags
 /// can supply an assumed current before the first synchronization.
-pub(super) fn client_tick(game: &mut GameLevel<'_>) {
+pub(super) fn client_tick(game: &mut Game<'_>) {
     if game.remote.is_none() || !game.native_on("create") {
         return;
     }
@@ -921,7 +906,7 @@ pub(super) fn client_tick(game: &mut GameLevel<'_>) {
     }
 }
 pub(super) fn draw(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     pos: [i32; 3],
     entity: &ModBlockEntity,
     draw: &mut BlockEntityDraw,

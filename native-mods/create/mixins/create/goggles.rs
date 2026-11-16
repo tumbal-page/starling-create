@@ -5,8 +5,7 @@
 // GeneratingKineticBlockEntity, GaugeBlockEntity, Speed/StressGaugeBlockEntity,
 // IRotate.{SpeedLevel,StressImpact}, TooltipHelper and Catnip LangBuilder.
 // Catnip's bundled Ponder 1.0.82 license is MIT (LICENSE_Ponder).
-use crate::game::GameLevel;
-use super::Game;
+use crate::game::Game;
 use crate::containers::BlockEntity;
 use crate::game::create_port::number;
 use create_engine::kinetics::{Kind, Pos};
@@ -98,7 +97,7 @@ fn bar(filled: usize) -> String {
     format!(" {}{} ", "█".repeat(filled), "▒".repeat(3 - filled))
 }
 
-pub(super) fn indent(game: &GameLevel<'_>, value: Text, extra: usize) -> Text {
+pub(super) fn indent(game: &Game<'_>, value: Text, extra: usize) -> Text {
     let space = game.native_text_width(" ");
     let count = (4.0 * (4 + extra) as f32 / space).ceil() as usize;
     Text::literal(" ".repeat(count)).append(value)
@@ -171,7 +170,7 @@ fn current_stress(value: f32) -> Text {
         .append(tr("gui.goggles.at_current_speed").with_style(&Style::color(text::DARK_GRAY)))
 }
 
-fn providers(game: &GameLevel<'_>, pos: Pos, block: &str, nbt: &Compound, goggles: bool) -> Vec<Text> {
+fn providers(game: &Game<'_>, pos: Pos, block: &str, nbt: &Compound, goggles: bool) -> Vec<Text> {
     if block == "create:basin" {
         return if goggles {
             super::create_port_basin_tooltip::lines(game, nbt)
@@ -318,7 +317,7 @@ fn providers(game: &GameLevel<'_>, pos: Pos, block: &str, nbt: &Compound, goggle
 // TooltipHelper.cutTextComponent, 200 px, gray/white underscore highlights.
 // Java BreakIterator's word+trailing-space boundaries agree for the supported
 // English/Russian warning sentences; other scripts retain native text wrapping.
-fn warning_lines(game: &GameLevel<'_>, message: &str) -> Vec<Text> {
+fn warning_lines(game: &Game<'_>, message: &str) -> Vec<Text> {
     let font = &game.gui.atlas.font;
     let mut strings = Vec::new();
     let mut line = String::new();
@@ -375,7 +374,7 @@ struct Tooltip {
 
 // RemovedGuiUtils.drawHoveringText: two-stage horizontal placement/wrapping,
 // then vertical clamping. The 2 px title gap is not applied between all lines.
-fn tooltip(game: &GameLevel<'_>, lines: Vec<Text>, at: [f32; 2], screen: [f32; 2]) -> Tooltip {
+fn tooltip(game: &Game<'_>, lines: Vec<Text>, at: [f32; 2], screen: [f32; 2]) -> Tooltip {
     let font = &game.gui.atlas.font;
     let [mouse_x, mouse_y] = at;
     let [screen_width, screen_height] = screen;
@@ -440,7 +439,7 @@ fn tooltip(game: &GameLevel<'_>, lines: Vec<Text>, at: [f32; 2], screen: [f32; 2
     }
 }
 
-fn background(game: &GameLevel<'_>, batch: &mut HudBatch, tooltip: &Tooltip, slide: f32, fade: f32) {
+fn background(game: &Game<'_>, batch: &mut HudBatch, tooltip: &Tooltip, slide: f32, fade: f32) {
     let Tooltip {
         x,
         y,
@@ -488,7 +487,7 @@ fn reset() {
     LAST_TRACE.with_borrow_mut(String::clear);
 }
 
-pub(super) fn hud(game: &GameLevel<'_>, batch: &mut HudBatch) {
+pub(super) fn hud(game: &Game<'_>, batch: &mut HudBatch) {
     if !game.native_on("create")
         || game.ui.hide_gui
         || game.spectator()

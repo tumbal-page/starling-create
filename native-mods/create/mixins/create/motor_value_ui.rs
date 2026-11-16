@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Create 6.0.10 ValueSettingsClient/Screen and KineticScrollValueBehaviour.
 // Rendering uses the original private value_settings.png sheet via the importer.
-use crate::game::GameLevel;
+use crate::game::Game;
 use crate::{containers::BlockEntity, mod_api::NativeScreenView};
 use horizon_client::{
     first_person::Hand,
@@ -62,12 +62,12 @@ fn formatted(setting: Setting) -> Text {
     crate::game::create_port_goggles::numeral(f64::from(setting.value.abs().max(1)))
         .append(arrow(setting.row))
 }
-fn can_interact(game: &GameLevel<'_>) -> bool {
+fn can_interact(game: &Game<'_>) -> bool {
     game.player.is_some()
         && game.may_build()
         && !game.keys.contains(&winit::keyboard::KeyCode::ShiftLeft)
 }
-fn saved(game: &GameLevel<'_>, pos: [i32; 3]) -> i32 {
+fn saved(game: &Game<'_>, pos: [i32; 3]) -> i32 {
     match game.world.block_entities.get(&(pos[0], pos[1], pos[2])) {
         Some(BlockEntity::Mod(entity)) => match entity.nbt.get(&"ScrollValue".into()) {
             Some(Tag::Int(value)) => *value,
@@ -84,7 +84,7 @@ fn setting(value: i32) -> Setting {
 }
 
 // CreativeMotorBlockEntity.MotorValueBox plus ValueBoxTransform.testHit.
-fn target(game: &GameLevel<'_>) -> Option<[i32; 3]> {
+fn target(game: &Game<'_>) -> Option<[i32; 3]> {
     let hit = game.pick()?;
     if game.native_block(hit.pos) != "create:creative_motor" {
         return None;
@@ -113,12 +113,12 @@ fn target(game: &GameLevel<'_>) -> Option<[i32; 3]> {
 }
 
 /// Alive source Outliner entries suppress goggles, including their expiry ticks.
-pub(super) fn active_value_box(game: &GameLevel<'_>) -> bool {
+pub(super) fn active_value_box(game: &Game<'_>) -> bool {
     crate::game::create_port_motor_value_world::active(game)
 }
 
 pub(super) fn interaction(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     button: i32,
     hand: Hand,
     _swing: &mut bool,
@@ -146,7 +146,7 @@ pub(super) fn interaction(
 }
 
 /// Call once per real client tick, including while the non-pausing board is open.
-pub(super) fn tick(game: &mut GameLevel<'_>) {
+pub(super) fn tick(game: &mut Game<'_>) {
     if !game.native_window() || !game.native_on("create") {
         return;
     }
@@ -271,7 +271,7 @@ impl Layout {
         Setting { row, value }
     }
 }
-fn layout(game: &GameLevel<'_>, size: [f32; 2]) -> Layout {
+fn layout(game: &Game<'_>, size: [f32; 2]) -> Layout {
     let label = game
         .gui
         .atlas
@@ -291,12 +291,12 @@ fn layout(game: &GameLevel<'_>, size: [f32; 2]) -> Layout {
     }
 }
 
-fn quad(game: &GameLevel<'_>, batch: &mut HudBatch, src: [f32; 4], dst: [f32; 4]) {
+fn quad(game: &Game<'_>, batch: &mut HudBatch, src: [f32; 4], dst: [f32; 4]) {
     game.native_sprite(batch, SPRITE, src, dst);
 }
 // UIRenderHelper.drawCropped samples with the original sheet's repeating UVs.
 // Split at the 256px sheet boundary so a crop never reads a neighboring atlas slot.
-fn crop(game: &GameLevel<'_>, batch: &mut HudBatch, source: [i32; 2], at: [i32; 2], size: [i32; 2]) {
+fn crop(game: &Game<'_>, batch: &mut HudBatch, source: [i32; 2], at: [i32; 2], size: [i32; 2]) {
     let mut dy = 0;
     while dy < size[1] {
         let sy = (source[1] + dy).rem_euclid(256);
@@ -316,7 +316,7 @@ fn crop(game: &GameLevel<'_>, batch: &mut HudBatch, source: [i32; 2], at: [i32; 
         dy += h;
     }
 }
-fn frame_border(game: &GameLevel<'_>, batch: &mut HudBatch, x: i32, y: i32, w: i32, h: i32) {
+fn frame_border(game: &Game<'_>, batch: &mut HudBatch, x: i32, y: i32, w: i32, h: i32) {
     for (src, at) in [
         ([65, 9], [x, y]),
         ([70, 9], [x + w - 4, y]),
@@ -344,7 +344,7 @@ fn frame_border(game: &GameLevel<'_>, batch: &mut HudBatch, x: i32, y: i32, w: i
         crop(game, batch, [0, 27], [x + 4, y + h - 3], [w - 8, 3]);
     }
 }
-fn text(game: &GameLevel<'_>, batch: &mut HudBatch, text: &Text, at: [i32; 2], rgb: u32) {
+fn text(game: &Game<'_>, batch: &mut HudBatch, text: &Text, at: [i32; 2], rgb: u32) {
     let [_, r, g, b] = rgb.to_be_bytes();
     batch.text_styled(
         &game.gui.atlas,
@@ -356,7 +356,7 @@ fn text(game: &GameLevel<'_>, batch: &mut HudBatch, text: &Text, at: [i32; 2], r
     );
 }
 
-pub(super) fn draw(game: &GameLevel<'_>, batch: &mut HudBatch, screen: &NativeScreenView<'_>) {
+pub(super) fn draw(game: &Game<'_>, batch: &mut HudBatch, screen: &NativeScreenView<'_>) {
     if game.native_mod_screen() != Some("create") {
         return;
     }
@@ -501,7 +501,7 @@ pub(super) fn draw(game: &GameLevel<'_>, batch: &mut HudBatch, screen: &NativeSc
 }
 
 pub(super) fn mouse_press(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     _screen: &NativeScreenView<'_>,
     _button: i32,
     canceled: &mut bool,
@@ -513,7 +513,7 @@ pub(super) fn mouse_press(
     }
 }
 pub(super) fn mouse_release(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     screen: &NativeScreenView<'_>,
     button: i32,
     canceled: &mut bool,
@@ -530,7 +530,7 @@ pub(super) fn mouse_release(
     }
 }
 pub(super) fn key_release(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     screen: &NativeScreenView<'_>,
     key: &str,
     canceled: &mut bool,
@@ -539,7 +539,7 @@ pub(super) fn key_release(
         *canceled = true;
     }
 }
-fn submit(game: &GameLevel<'_>, screen: &NativeScreenView<'_>) -> bool {
+fn submit(game: &Game<'_>, screen: &NativeScreenView<'_>) -> bool {
     if game.native_mod_screen() != Some("create") {
         return false;
     }
@@ -557,7 +557,7 @@ fn submit(game: &GameLevel<'_>, screen: &NativeScreenView<'_>) -> bool {
     })
 }
 pub(super) fn scroll(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     screen: &NativeScreenView<'_>,
     scroll: [f64; 2],
     modifiers: u32,
@@ -585,7 +585,7 @@ pub(super) fn scroll(
     }
 }
 
-pub(super) fn frame(game: &mut GameLevel<'_>) {
+pub(super) fn frame(game: &mut Game<'_>) {
     if !game.native_window() {
         return;
     }
@@ -631,7 +631,7 @@ pub(super) fn frame(game: &mut GameLevel<'_>) {
     }
 }
 
-pub(super) fn hud(game: &GameLevel<'_>, batch: &mut HudBatch) {
+pub(super) fn hud(game: &Game<'_>, batch: &mut HudBatch) {
     if game.ui.hide_gui || game.native_mod_screen().is_some() || !can_interact(game) {
         return;
     }

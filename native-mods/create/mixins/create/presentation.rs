@@ -2,8 +2,8 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Client adapter for crank interpolation, depot piles, goggles and kinetic feedback.
-use crate::game::GameLevel;
-use super::{Game, native_block_entity_draw::BlockEntityDraw};
+use crate::game::Game;
+use super::native_block_entity_draw::BlockEntityDraw;
 use crate::game::create_port::{integer, number};
 use crate::{
     containers::{BlockEntity, ModBlockEntity},
@@ -47,21 +47,21 @@ fn text(nbt: &Compound, key: &str) -> String {
         _ => String::new(),
     }
 }
-fn in_tag(game: &GameLevel<'_>, item: &ItemStack, tag: &str) -> bool {
+fn in_tag(game: &Game<'_>, item: &ItemStack, tag: &str) -> bool {
     game.native_recipe_ingredient(&serde_json::Value::String(format!("#{tag}")))
         .is_some_and(|i| i.test(item))
 }
-fn key(game: &GameLevel<'_>, pos: Pos) -> (String, Pos) {
+fn key(game: &Game<'_>, pos: Pos) -> (String, Pos) {
     (game.dim.id().to_owned(), pos)
 }
-pub(super) fn crank_angle(game: &GameLevel<'_>, pos: Pos, partial: f32) -> f32 {
+pub(super) fn crank_angle(game: &Game<'_>, pos: Pos, partial: f32) -> f32 {
     MOTION.with(|m| {
         m.borrow()
             .get(&key(game, pos))
             .map_or(0.0, |v| v.crank.rendered(partial))
     })
 }
-pub(super) fn dial(game: &GameLevel<'_>, pos: Pos, partial: f32) -> f32 {
+pub(super) fn dial(game: &Game<'_>, pos: Pos, partial: f32) -> f32 {
     MOTION.with(|m| {
         m.borrow().get(&key(game, pos)).map_or(0.0, |v| {
             v.previous_dial + (v.dial - v.previous_dial) * partial
@@ -70,7 +70,7 @@ pub(super) fn dial(game: &GameLevel<'_>, pos: Pos, partial: f32) -> f32 {
 }
 // KineticBlockEntityVisual.applyOverstressEffect / standardKineticRotationTransform:
 // only the rotating instances receive this fading red/spring-green tint.
-pub(super) fn kinetic_tint(game: &GameLevel<'_>, pos: Pos) -> u32 {
+pub(super) fn kinetic_tint(game: &Game<'_>, pos: Pos) -> u32 {
     MOTION.with(|m| {
         let effect = m
             .borrow()
@@ -83,7 +83,7 @@ pub(super) fn kinetic_tint(game: &GameLevel<'_>, pos: Pos) -> u32 {
         ) & 0xFFFFFF
     })
 }
-pub(super) fn tick(game: &mut GameLevel<'_>) {
+pub(super) fn tick(game: &mut Game<'_>) {
     if !game.native_window() || game.remote.is_none() || !game.native_on("create") {
         return;
     }
@@ -182,7 +182,7 @@ fn saved_stack(nbt: &Compound) -> Option<ItemStack> {
     nbt.get(&"Item".into())
         .and_then(horizon_items::item_nbt::item_from_nbt)
 }
-fn stack(game: &GameLevel<'_>, draw: &mut BlockEntityDraw, item: &ItemStack, angle: f32) {
+fn stack(game: &Game<'_>, draw: &mut BlockEntityDraw, item: &ItemStack, angle: f32) {
     let block = game
         .pack
         .assets
@@ -228,7 +228,7 @@ fn stack(game: &GameLevel<'_>, draw: &mut BlockEntityDraw, item: &ItemStack, ang
         }
     }
 }
-pub(super) fn depot(game: &GameLevel<'_>, _: Pos, entity: &ModBlockEntity, draw: &mut BlockEntityDraw) {
+pub(super) fn depot(game: &Game<'_>, _: Pos, entity: &ModBlockEntity, draw: &mut BlockEntityDraw) {
     draw.push();
     draw.translate([0.5, 15.0 / 16.0, 0.5]);
     if let Some(Tag::Compound(held)) = entity.nbt.get(&"HeldItem".into())
@@ -271,7 +271,7 @@ pub(super) fn depot(game: &GameLevel<'_>, _: Pos, entity: &ModBlockEntity, draw:
 }
 // Placement guides require the original Create outliner implementation. The
 // previous port_hint arrow models were invented substitutes and are removed.
-pub(super) fn hints(_: &GameLevel<'_>, _: Pos, _: &mut BlockEntityDraw) {}
-pub(super) fn hud(game: &GameLevel<'_>, batch: &mut HudBatch) {
+pub(super) fn hints(_: &Game<'_>, _: Pos, _: &mut BlockEntityDraw) {}
+pub(super) fn hud(game: &Game<'_>, batch: &mut HudBatch) {
     crate::game::create_port_goggles::hud(game, batch);
 }

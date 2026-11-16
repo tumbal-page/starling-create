@@ -2,9 +2,8 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // BasinBlockEntity.addToGoggleTooltip. Source item and tank iteration order.
-use crate::game::GameLevel;
+use crate::game::Game;
 use super::{
-    Game,
     create_port_goggles::{indent, numeral, tr},
 };
 use crate::items::ItemStack;
@@ -29,7 +28,7 @@ fn inventory(nbt: &Compound, key: &str) -> [Option<ItemStack>; 9] {
     }
     slots
 }
-pub(super) fn lines(game: &GameLevel<'_>, nbt: &Compound) -> Vec<Text> {
+pub(super) fn lines(game: &Game<'_>, nbt: &Compound) -> Vec<Text> {
     let mut lines = vec![indent(game, tr("gui.goggles.basin_contents"), 0)];
     // CombinedInvWrapper(inputInventory, outputInventory).
     for key in ["InputItems", "OutputItems"] {

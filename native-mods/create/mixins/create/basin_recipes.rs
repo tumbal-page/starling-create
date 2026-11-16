@@ -5,8 +5,8 @@
 // Create ac0c444d9828da3453ae8cc65338e8de063286fb (6.0.10).
 // The two operators keep distinct source caches; live cycles own their recipe Arc
 // across a data-pack reload, while every subsequent lookup sees the new generation.
-use crate::game::GameLevel;
-use super::{Game, create_port_basin as basin, create_port_fluid_codec as fluids};
+use crate::game::Game;
+use super::{create_port_basin as basin, create_port_fluid_codec as fluids};
 use crate::items::ItemStack;
 use create_engine::{basin as rules, transport::SessionCache};
 use horizon_client::crafting::{Ingredient, Recipe as Crafting};
@@ -51,7 +51,7 @@ struct Recipes {
     compiled: Vec<Arc<Recipe>>,
 }
 
-fn compile(game: &GameLevel<'_>, id: &str, json: &serde_json::Value) -> Option<Recipe> {
+fn compile(game: &Game<'_>, id: &str, json: &serde_json::Value) -> Option<Recipe> {
     // Strict bounded codecs: no unknown ingredient fields can be dropped to
     // turn an unsupported predicate into a simpler item/fluid match.
     let heat = match json.get("heat_requirement") {
@@ -195,7 +195,7 @@ pub(super) fn reset(reload: bool) {
     }
 }
 fn with_recipes<R>(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     operator: Operator,
     action: impl FnOnce(&mut Recipes) -> R,
 ) -> R {
@@ -215,7 +215,7 @@ fn can_compress(ingredients: &[Ingredient]) -> bool {
     matches!(ingredients.len(), 4 | 9)
         && ingredients.iter().all(|i| i.order == ingredients[0].order)
 }
-fn recipes(game: &GameLevel<'_>, operator: Operator) -> Vec<Arc<Recipe>> {
+fn recipes(game: &Game<'_>, operator: Operator) -> Vec<Arc<Recipe>> {
     with_recipes(game, operator, |cache| {
         let custom = game.native_recipes_of_type(operator.recipe_type());
         let table = game.recipes();
@@ -338,7 +338,7 @@ impl rules::Context<basin::Key, fluids::Key> for Context<'_, '_> {
     }
 }
 pub(super) fn matching(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: Pos,
     basin: &mut basin::Basin,
     recipe: &Recipe,
@@ -360,7 +360,7 @@ pub(super) fn matching(
         .success()
 }
 pub(super) fn choose(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: Pos,
     basin: &mut basin::Basin,
     operator: Operator,
@@ -404,7 +404,7 @@ pub(super) fn choose(
     found.sort_by_key(|r| std::cmp::Reverse(r.inputs.len()));
     found.into_iter().next()
 }
-pub(super) fn apply(game: &mut GameLevel<'_>, pos: Pos, recipe: Option<&Recipe>) -> bool {
+pub(super) fn apply(game: &mut Game<'_>, pos: Pos, recipe: Option<&Recipe>) -> bool {
     let Some(recipe) = recipe else {
         return false;
     };

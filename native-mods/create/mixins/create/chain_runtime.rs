@@ -2,8 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // ChainDriveBlock: native state/shape/wrench boundary. Simulation is in engine.
-use super::{Game};
-use crate::game::GameLevel;
+use crate::game::Game;
 use create_engine::{
     chain_drive::{self, Part, State},
     kinetics::Axis,
@@ -79,7 +78,7 @@ fn neighbors(
 }
 
 pub(super) fn placement(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     state: BlockStateId,
     context: &PlacementContext,
 ) -> Option<BlockStateId> {
@@ -94,7 +93,7 @@ pub(super) fn placement(
 }
 
 pub(super) fn shape(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     state: BlockStateId,
     direction: horizon_core::geometry::Direction,
     neighbor: BlockStateId,
@@ -121,7 +120,7 @@ pub(super) fn shape(
     );
 }
 
-pub(super) fn wrench(game: &mut GameLevel<'_>, pos: [i32; 3], face: Direction) -> bool {
+pub(super) fn wrench(game: &mut Game<'_>, pos: [i32; 3], face: Direction) -> bool {
     let registry = game.pack.assets.registry;
     let state = game.world.block(pos[0], pos[1], pos[2]);
     let Some(value) = read(registry, state) else {
