@@ -12,9 +12,13 @@ pub(in crate::game) fn block(game: &mut Game<'_>, hand: Hand) -> bool {
     }
     let held = game.with_hand(hand, |g| g.held().cloned());
     let Some(hit) = game.pick() else { return false };
-    let lifecycle = burner::reacts(game, hit.pos, held.as_ref());
+    let lifecycle = game.with_level(|_, level, _| {
+        burner::reacts(level, hit.pos, held.as_ref())
+    });
     let fuel = game.with_hand(hand, |g| {
-        super::super::create_port_burner::reacts(g, hit.pos)
+        g.with_level(|_, level, _| {
+            super::super::create_port_burner::reacts(level, hit.pos)
+        })
     });
     if !lifecycle && !fuel {
         return false;
@@ -35,9 +39,13 @@ pub(in crate::game) fn block(game: &mut Game<'_>, hand: Hand) -> bool {
     }
     let predicted = game.with_hand(hand, |g| {
         if lifecycle {
-            burner::predict_block(g, hit.pos, held.as_ref())
+            g.with_level(|_, level, _| {
+                burner::predict_block(level, hit.pos, held.as_ref())
+            })
         } else {
-            super::super::create_port_burner::predict_client(g, hit.pos)
+            g.with_level(|_, level, _| {
+                super::super::create_port_burner::predict_client(level, hit.pos)
+            })
         }
     });
     debug_assert!(predicted);
@@ -57,7 +65,9 @@ pub(in crate::game) fn entity(game: &mut Game<'_>, hand: Hand) -> bool {
             .remote_object_hit(false)
             .is_some_and(|object| object.distance < distance && game.before_block(object.distance))
         || game.remote_mob_takes(index, hand)
-        || !burner::entity_reacts(game, index, hand)
+        || !game.with_level(|_, level, _| {
+            burner::entity_reacts(level, index, hand)
+        })
     {
         return false;
     }
@@ -71,7 +81,9 @@ pub(in crate::game) fn entity(game: &mut Game<'_>, hand: Hand) -> bool {
         location: [0.0, 1.0, 0.0],
         secondary: game.keys.contains(&winit::keyboard::KeyCode::ShiftLeft),
     }));
-    let predicted = burner::predict_entity(game, index, hand);
+    let predicted = game.with_level(|_, level, _| {
+        burner::predict_entity(level, index, hand)
+    });
     debug_assert!(predicted);
     true // Create's FAIL ends the item turn without an arm swing.
 }
