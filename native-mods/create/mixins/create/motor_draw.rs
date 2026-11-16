@@ -1,5 +1,5 @@
 fn motor_draw(
-    game: &mut crate::game::Game<'_>,
+    game: &crate::game::Game<'_>,
     batch: &mut horizon_client::hud::HudBatch,
     screen: &crate::mod_api::NativeScreenView<'_>,
 ) {

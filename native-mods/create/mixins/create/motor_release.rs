@@ -1,5 +1,5 @@
 fn motor_release(
-    game: &mut crate::game::Game<'_>,
+    game: &crate::game::Game<'_>,
     screen: &crate::mod_api::NativeScreenView<'_>,
     button: i32,
     canceled: &mut bool,
