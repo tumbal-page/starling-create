@@ -734,6 +734,7 @@ impl SoundInstance {
                     self.position = cart.position;
                 }
             }
+            Ticking::Native => {}
         }
     }
     /// `LoopSoundInstance.fadeOut`.

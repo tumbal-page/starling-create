@@ -330,6 +330,8 @@ enum Behaviour {
         start: [f64; 3],
         colors: [u32; 2],
     },
+    /// Native mod compiled particle: ticked by an external `ParticleController`.
+    Controlled { translucent: bool },
 }
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum DripStage {
@@ -379,6 +381,8 @@ pub struct Particle {
     pre_tick: bool,
     /// `Particle.random`: the particle's own generator (`RandomSource.create()`).
     random: LegacyRandom,
+    /// Optional compiled controller for native mod particles (`ParticleController::tick`).
+    controller: Option<Box<dyn ParticleController>>,
 }
 fn aabb_at(p: [f64; 3], w: f32, h: f32) -> Aabb {
     let w = f64::from(w) / 2.0;
@@ -673,7 +677,7 @@ pub fn along_axis(
 
 impl Particle {
     /// `Particle(level, x, y, z)` + `SingleQuadParticle` (no initial velocity).
-    fn at(random: &mut LegacyRandom, ty: ParticleType, p: [f64; 3]) -> Self {
+    pub fn at(random: &mut LegacyRandom, ty: ParticleType, p: [f64; 3]) -> Self {
         let mut particle = Self::base_at(random, ty, p);
         particle.size = 0.1 * (random.next_float() * 0.5 + 0.5) * 2.0;
         particle
@@ -716,6 +720,7 @@ impl Particle {
             no_render: false,
             pre_tick: false,
             random: LegacyRandom::new(0),
+            controller: None,
         }
     }
     /// `Particle(level, x, y, z, xa, ya, za)`: jittered, normalized initial velocity.
@@ -820,6 +825,35 @@ impl Particle {
     }
     pub fn is_alive(&self) -> bool {
         !self.removed
+    }
+    /// Marks this particle for removal at the end of the tick.
+    pub fn remove(&mut self) {
+        self.removed = true;
+    }
+    /// Advances the particle's age; returns false when the lifetime is exceeded.
+    pub fn advance_age(&mut self) -> bool {
+        self.previous = self.position;
+        self.o_roll = self.roll;
+        let alive = self.age < self.lifetime;
+        self.age = self.age.saturating_add(1);
+        self.removed |= !alive;
+        alive
+    }
+    /// Sets whether the particle is rendered.
+    pub fn set_visible(&mut self, visible: bool) {
+        self.no_render = !visible;
+    }
+    /// The particle's own random generator.
+    pub fn random(&mut self) -> &mut LegacyRandom {
+        &mut self.random
+    }
+    /// Sets full-bright rendering (sky light independent of world light).
+    pub fn set_full_bright(&mut self, bright: bool) {
+        self.light = if bright {
+            Light::FullBright
+        } else {
+            Light::World
+        };
     }
     /// `Particle.move` with `Entity.collideBoundingBox` against block collision shapes.
     fn move_by(&mut self, level: &ParticleLevel, d: [f64; 3]) {
@@ -1666,6 +1700,48 @@ impl ParticleEngine {
             }),
         }
     }
+
+    /// Creates a named billboard with custom compiled behavior and no vanilla motion.
+    /// Returns `None` for missing sprite sets or when too far from camera (>1024 units)
+    /// or minimal particle level.
+    pub fn controlled<C: ParticleController>(
+        &mut self,
+        name: &str,
+        position: [f64; 3],
+        translucent: bool,
+        controller: C,
+    ) -> Option<Particle> {
+        let minimal = self.calculate_particle_level(false) == 2;
+        let distance: f64 = position
+            .iter()
+            .zip(self.camera)
+            .map(|(p, c)| (p - c).powi(2))
+            .sum();
+        if minimal || !distance.is_finite() || distance > 1024.0 {
+            return None;
+        }
+        let (set, _) = *self.mod_sets.get(name)?;
+        let mut random = LegacyRandom::new(self.seeds.next_long());
+        let mut particle = Particle::at(&mut random, ParticleType::Smoke, position);
+        particle.random = random;
+        particle.set = Some(set);
+        particle.sprite = Sprite::Index(*self.set_sprites.get(set as usize)?.first()?);
+        particle.behaviour = Behaviour::Controlled { translucent };
+        particle.controller = Some(Box::new(controller));
+        Some(particle)
+    }
+
+    /// Chooses a frame from this particle's declared sprite set.
+    pub fn set_sprite_frame(&self, particle: &mut Particle, frame: usize) {
+        if let Some(sprites) = particle
+            .set
+            .and_then(|s| self.set_sprites.get(s as usize))
+            && !sprites.is_empty()
+        {
+            particle.sprite = Sprite::Index(sprites[frame.min(sprites.len() - 1)]);
+        }
+    }
+
     /// `SpriteSet.get(random)`.
     fn sprite_from_set(&mut self, ty: ParticleType) -> Sprite {
         match self.sets.get(&ty) {
@@ -4179,6 +4255,17 @@ impl ParticleEngine {
                     p.velocity[1] *= f;
                 }
                 p.behaviour = Behaviour::DragonBreath { hit_ground };
+            }
+            Behaviour::Controlled { translucent: _ } => {
+                if let Some(controller) = p.controller.as_mut() {
+                    let update = controller.tick(p, level);
+                    if let Some(frame) = update.frame {
+                        self.set_sprite_frame(p, frame);
+                    }
+                    for (options, pos, vel) in update.spawned {
+                        self.add(&options, pos, vel);
+                    }
+                }
             }
         }
     }

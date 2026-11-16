@@ -408,6 +408,7 @@ use horizon_client::{
     models,
     motion::{MotionEvent, MotionResources, PlayerMotion},
     mouse::{LookOptions, MouseLook},
+    mod_api::{NativeFluidAction, NativeFluidDrain, NativeFluidStack, NativeModelRenderOptions},
     particles::Particle,
     save::{Level, Persistent, SaveDir},
     settings::Settings,
@@ -3234,6 +3235,8 @@ struct Game<'a> {
     fangs: fangs::FangState,
     /// The local player as a model (third person, the inventory).
     player_model: Option<Mob>,
+    /// Health damage catalog and player float IDs (`game/health.rs`).
+    health_resources: crate::health::HealthResources,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum Dim {
@@ -4572,6 +4575,101 @@ impl Game<'_> {
         reason: &'static str,
     ) -> bool {
         self.with_level(|_, level, _| level.allow_cauldron_level_change(pos, from, to, reason))
+    }
+    /// Fill a block's fluid tanks with `stack` through `side` (None = any side).
+    /// Returns accepted millibuckets. `Simulate` is read-only; `Execute` mutates.
+    pub(super) fn native_fluid_fill_stack(
+        &mut self,
+        _dimension: &str,
+        pos: [i32; 3],
+        side: Option<Direction>,
+        stack: &NativeFluidStack,
+        action: NativeFluidAction,
+    ) -> i32 {
+        let mut accepted = None;
+        self.native_custom_fluid_fill(pos, side, stack, action, &mut accepted);
+        accepted.unwrap_or(0)
+    }
+    /// Drain from a block's fluid tanks through `side` (None = any side)
+    /// matching `drain`. Returns the drained stack, or None. `Simulate` is
+    /// read-only; `Execute` mutates.
+    pub(super) fn native_fluid_drain_stack(
+        &mut self,
+        _dimension: &str,
+        pos: [i32; 3],
+        side: Option<Direction>,
+        drain: &NativeFluidDrain,
+        action: NativeFluidAction,
+    ) -> Option<NativeFluidStack> {
+        let mut out = None;
+        self.native_custom_fluid_drain(pos, side, drain, action, &mut out);
+        out
+    }
+    /// Draws a still-fluid box under the current block-entity draw pose.
+    /// Stub: fluid rendering not yet ported from Horizon.
+    pub(super) fn native_draw_fluid_box(
+        &mut self,
+        _draw: &mut crate::game::native_block_entity_draw::BlockEntityDraw,
+        _stack: &NativeFluidStack,
+        _bounds: [f32; 6],
+        _options: NativeFluidRenderOptions,
+    ) -> bool {
+        false
+    }
+    /// Damages the item held in the given equipment slot by `amount`.
+    pub(super) fn damage_held_in_slot(
+        &mut self,
+        amount: u32,
+        _break_slot: horizon_world::player_inventory::EquipmentSlot,
+    ) {
+        if self.creative {
+            return;
+        }
+        let Some(stack) = self.held_mut().as_mut() else {
+            return;
+        };
+        stack.damage = stack.damage.saturating_add(amount);
+    }
+    /// Draws a named standalone terrain model. Stub: model rendering not yet
+    /// ported from Horizon.
+    pub(super) fn native_draw_terrain_model(
+        &mut self,
+        _draw: &mut crate::game::native_block_entity_draw::BlockEntityDraw,
+        _model: &str,
+        _options: crate::mod_api::NativeModelRenderOptions<'_>,
+    ) -> bool {
+        false
+    }
+    /// Returns the entity's saved NBT compound (minus `id`). Stub: entity NBT
+    /// not yet ported from Horizon.
+    pub(super) fn native_entity_nbt(
+        &mut self,
+        _entity: crate::mod_api::EntityRef,
+    ) -> Option<Compound> {
+        None
+    }
+    /// Draws a depth-tested world quad. Stub: world drawing not yet ported
+    /// from Horizon.
+    pub(super) fn native_world_quad(
+        &mut self,
+        _draw: &mut crate::mod_api::NativeWorldDraw,
+        _sprite: &str,
+        _corners: [[f32; 3]; 4],
+        _uv: [f32; 4],
+        _color: [u8; 4],
+    ) -> bool {
+        false
+    }
+    /// Draws styled world text. Stub: world text drawing not yet ported from
+    /// Horizon.
+    pub(super) fn native_world_text(
+        &mut self,
+        _draw: &mut crate::mod_api::NativeWorldDraw,
+        _text: &crate::mod_api::Text,
+        _color: u32,
+        _outline: Option<u32>,
+    ) -> f32 {
+        0.0
     }
     /// Level.setBlock(pos, state, UPDATE_ALL) with neighbour/shape updates.
     fn level_set(&mut self, pos: [i32; 3], state: BlockStateId) -> Result<()> {
@@ -19445,6 +19543,7 @@ impl<'a> Game<'a> {
             camera_type: Default::default(),
             fangs: Default::default(),
             player_model: None,
+            health_resources: crate::health::HealthResources::load(&root)?,
         })
     }
 }
