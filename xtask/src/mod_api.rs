@@ -1117,7 +1117,6 @@ fn generate(root: &Path, check: bool) -> Result<(), String> {
 mod tests {
     use quote::ToTokens;
     use std::sync::{Arc, Mutex};
-    use std::time::Duration;
 
     struct ItemStack;
     struct BlockEntityDraw(Vec<u32>);
@@ -1211,6 +1210,7 @@ mod tests {
             }
         }
         mod horizon_client {
+            pub use ::horizon_client::mod_api;
             pub mod camera {
                 pub struct CameraEntity;
                 pub struct FovPlayer;
