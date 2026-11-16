@@ -381,8 +381,8 @@ pub struct Particle {
     pre_tick: bool,
     /// `Particle.random`: the particle's own generator (`RandomSource.create()`).
     random: LegacyRandom,
-    /// Optional compiled controller for native mod particles (`ParticleController::tick`).
-    controller: Option<Box<dyn ParticleController>>,
+    /// Optional compiled controller for native mod particles (`Controller::tick`).
+    controller: Option<Box<dyn Controller>>,
 }
 fn aabb_at(p: [f64; 3], w: f32, h: f32) -> Aabb {
     let w = f64::from(w) / 2.0;
@@ -4542,16 +4542,29 @@ pub struct ParticleUpdate {
 /// Owned behavior for a compiled native particle. Cloning a particle clones its
 /// controller state. Do not retain world references; inspect `level` each tick.
 pub trait ParticleController: Clone + Debug + Send + Sync + 'static {
-    /// Clone this controller as a trait object.
-    fn clone_box(&self) -> Box<dyn ParticleController>;
-    fn clone_box(&self) -> Box<dyn ParticleController> {
-        Box::new(self.clone())
-    }
     /// Call `particle.advance_age()` for ordinary lifetime/interpolation, or
     /// explicitly maintain those fields for an overridden source tick.
     fn tick(&mut self, particle: &mut Particle, level: &ParticleLevel<'_>) -> ParticleUpdate;
 }
-impl Clone for Box<dyn ParticleController> {
+
+/// Internal trait used as `dyn Controller` in `Particle.controller`.
+/// Separate from `ParticleController` so `Box<dyn Controller>` can implement
+/// `Clone` without requiring `ParticleController` to be object-safe.
+pub(crate) trait Controller: Debug + Send + Sync {
+    fn tick(&mut self, particle: &mut Particle, level: &ParticleLevel<'_>) -> ParticleUpdate;
+    fn clone_box(&self) -> Box<dyn Controller>;
+}
+
+impl<T: ParticleController> Controller for T {
+    fn tick(&mut self, particle: &mut Particle, level: &ParticleLevel<'_>) -> ParticleUpdate {
+        ParticleController::tick(self, particle, level)
+    }
+    fn clone_box(&self) -> Box<dyn Controller> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<dyn Controller> {
     fn clone(&self) -> Self {
         self.clone_box()
     }
