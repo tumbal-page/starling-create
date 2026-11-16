@@ -1050,6 +1050,7 @@ pub(super) use horizon_world::level::flags;
 #[allow(dead_code)]
 pub(crate) const NATIVE_HOOKS_API: u32 = 645;
 
+#[allow(dead_code)]
 impl GameLevel<'_> {
     /// Whether mod `mod_id` is enabled. On `GameLevel` the settings are not
     /// directly available; a mod whose code is running is always enabled.
