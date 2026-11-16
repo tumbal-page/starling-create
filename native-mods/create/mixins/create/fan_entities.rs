@@ -5,6 +5,7 @@
 // Player force runs on its client; the server applies hazards and clears fall
 // bookkeeping. Sending an additional server impulse would apply the force twice.
 use crate::game::Game;
+use crate::game::GameLevel;
 use crate::game::commands::Target;
 use create_engine::{
     fan::{self, ProcessingType, Segment},
@@ -375,7 +376,7 @@ fn affect_player(game: &mut Game<'_>, kind: ProcessingType) {
         };
         player.set_remaining_fire_ticks(0);
         let at = [player.position.x, player.position.y, player.position.z];
-        let pitch = 1.6 + (game.world.random.next_float() - game.world.random.next_float()) * 0.4;
+        let pitch = 1.6 + game.with_level(|_, level, _| (level.world.random.next_float() - level.world.random.next_float()) * 0.4);
         sound(
             game,
             "minecraft:entity.generic.extinguish_fire",
@@ -427,7 +428,7 @@ fn affect_mob(game: &mut Game<'_>, index: usize, kind: ProcessingType) {
     let at = [mob.position.x, mob.position.y, mob.position.z];
     let damage = effects
         .damage
-        .map(|(damage, amount)| (damage_kind(game, damage), amount));
+        .map(|(damage, amount)| game.with_level(|_, level, _| (damage_kind(level, damage), amount)));
     let mut added = Vec::new();
     {
         let mob = &mut game.mobs[index];
@@ -457,7 +458,7 @@ fn affect_mob(game: &mut Game<'_>, index: usize, kind: ProcessingType) {
         game.mod_effect_added(status.id, Some(id as i32), status.amplifier, new);
     }
     if effects.extinguish {
-        let pitch = 1.6 + (game.world.random.next_float() - game.world.random.next_float()) * 0.4;
+        let pitch = 1.6 + game.with_level(|_, level, _| (level.world.random.next_float() - level.world.random.next_float()) * 0.4);
         sound(
             game,
             "minecraft:entity.generic.extinguish_fire",
@@ -466,7 +467,7 @@ fn affect_mob(game: &mut Game<'_>, index: usize, kind: ProcessingType) {
             pitch,
         );
     }
-    match effects.horse {
+        match effects.horse {
         Horse::Progress { value, sound_pitch } => {
             if let Some(pitch) = sound_pitch {
                 sound(game, "minecraft:particle.soul_escape", at, 1.0, pitch);
@@ -477,7 +478,7 @@ fn affect_mob(game: &mut Game<'_>, index: usize, kind: ProcessingType) {
         Horse::None => {}
     }
 }
-fn damage_kind(game: &Game<'_>, damage: DamageType) -> DamageKind {
+fn damage_kind(game: &GameLevel<'_>, damage: DamageType) -> DamageKind {
     if damage == DamageType::Drown {
         return DamageKind::Drown;
     }
