@@ -183,7 +183,11 @@ impl ModBlockEntity {
         self.client_update_fields
             .get()
             .map_or_else(Compound::new, |fields| {
-                std::mem::take(&mut *fields.lock().unwrap_or_else(std::sync::PoisonError::into_inner))
+                std::mem::take(
+                    &mut *fields
+                        .lock()
+                        .unwrap_or_else(std::sync::PoisonError::into_inner),
+                )
             })
     }
     /// A client's copy loads the tag the server sent (`loadWithComponents`

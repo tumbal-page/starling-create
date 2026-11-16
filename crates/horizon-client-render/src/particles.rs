@@ -331,7 +331,9 @@ enum Behaviour {
         colors: [u32; 2],
     },
     /// Native mod compiled particle: ticked by an external `ParticleController`.
-    Controlled { translucent: bool },
+    Controlled {
+        translucent: bool,
+    },
 }
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum DripStage {
@@ -1733,9 +1735,7 @@ impl ParticleEngine {
 
     /// Chooses a frame from this particle's declared sprite set.
     pub fn set_sprite_frame(&self, particle: &mut Particle, frame: usize) {
-        if let Some(sprites) = particle
-            .set
-            .and_then(|s| self.set_sprites.get(s as usize))
+        if let Some(sprites) = particle.set.and_then(|s| self.set_sprites.get(s as usize))
             && !sprites.is_empty()
         {
             particle.sprite = Sprite::Index(sprites[frame.min(sprites.len() - 1)]);

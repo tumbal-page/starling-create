@@ -224,7 +224,6 @@ mod names;
 mod narrator;
 mod native_biome_colors;
 pub mod native_block_entity_draw;
-pub mod native_world_draw;
 #[cfg(target_os = "android")]
 mod native_builds;
 mod native_claimed_items;
@@ -257,6 +256,7 @@ mod native_shaders;
 mod native_ticks;
 mod native_visuals;
 mod native_world_columns;
+pub mod native_world_draw;
 mod native_world_edit;
 mod native_world_read;
 mod natural_spawning;
@@ -405,10 +405,10 @@ use horizon_client::{
     light::LightTables,
     mesher::{MeshTables, Vertex},
     mobs::{Mob, MobType, MobTypes},
+    mod_api::{NativeFluidAction, NativeFluidDrain, NativeFluidStack, NativeModelRenderOptions},
     models,
     motion::{MotionEvent, MotionResources, PlayerMotion},
     mouse::{LookOptions, MouseLook},
-    mod_api::{NativeFluidAction, NativeFluidDrain, NativeFluidStack, NativeModelRenderOptions},
     particles::Particle,
     save::{Level, Persistent, SaveDir},
     settings::Settings,
@@ -4642,10 +4642,7 @@ impl Game<'_> {
     }
     /// Returns the entity's saved NBT compound (minus `id`). Stub: entity NBT
     /// not yet ported from Horizon.
-    pub(super) fn native_entity_nbt(
-        &self,
-        _entity: crate::mod_api::EntityRef,
-    ) -> Option<Compound> {
+    pub(super) fn native_entity_nbt(&self, _entity: crate::mod_api::EntityRef) -> Option<Compound> {
         None
     }
     /// Draws a depth-tested world quad. Stub: world drawing not yet ported

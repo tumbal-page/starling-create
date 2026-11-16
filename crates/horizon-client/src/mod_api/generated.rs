@@ -4664,7 +4664,11 @@ pub trait Hooks: Send + Sync {
         let _ = event;
     }
     /// Opt a non-vanilla block into a state-aware block entity factory. API 572.
-    fn stateful_block_entity(&self, level: &dyn LevelHost, event: &mut StatefulBlockEntityEvent<'_>) {
+    fn stateful_block_entity(
+        &self,
+        level: &dyn LevelHost,
+        event: &mut StatefulBlockEntityEvent<'_>,
+    ) {
         let _ = level;
         let _ = event;
     }
@@ -4885,7 +4889,12 @@ pub fn dispatch_block_entity_from_state(
         entity,
     };
     for mod_hook in super::entered(mods, "block_entity_from_state") {
-        mod_hook.block_entity_from_state(level, &mut event.block, &mut event.properties, &mut event.entity);
+        mod_hook.block_entity_from_state(
+            level,
+            &mut event.block,
+            &mut event.properties,
+            &mut event.entity,
+        );
     }
 }
 

@@ -1796,7 +1796,6 @@ impl GameLevel<'_> {
     ) {
         mod_api::dispatch_block_clone_item(self, mod_api::mods(), block, pos, state, stack);
     }
-
 }
 
 /// The camera shake native mods ask for (`native_camera_shake`): turns in
@@ -8070,14 +8069,7 @@ impl Game<'_> {
         swing: &mut Option<bool>,
     ) {
         self.with_level(|_, level, _| {
-            mod_api::dispatch_item_interact_mob(
-                level,
-                mod_api::mods(),
-                entity,
-                kind,
-                stack,
-                swing,
-            );
+            mod_api::dispatch_item_interact_mob(level, mod_api::mods(), entity, kind, stack, swing);
         });
     }
 
