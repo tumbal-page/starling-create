@@ -198,13 +198,17 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: Pos) -> bool {
             } else {
                 EquipmentSlot::MainHand
             };
-            game.damage_held_in_slot(1, slot);
+            game.with_level(|_, level, _| {
+                level.damage_held_in_slot(1, slot);
+            });
             if let Some(state) = game.pack.assets.registry.default_state(LIT) {
                 game.native_set_block(game.dim.id(), pos, state, 3);
             }
         }
         Action::Extinguish => {
-            game.damage_held_in_slot(1, EquipmentSlot::MainHand);
+            game.with_level(|_, level, _| {
+                level.damage_held_in_slot(1, EquipmentSlot::MainHand);
+            });
             if let Some(state) = game.pack.assets.registry.default_state(BLOCK) {
                 game.native_set_block(game.dim.id(), pos, state, 3);
             }

@@ -552,7 +552,7 @@ pub(super) fn fluid_fill(
     action: NativeFluidAction,
     out: &mut Option<i32>,
 ) {
-    let Some(mut state) = fluid_state(game, pos) else {
+    let Some(mut state) = game.with_level(|_, level, _| fluid_state(level, pos)) else {
         return;
     };
     *out = Some(0);
@@ -580,7 +580,7 @@ pub(super) fn fluid_drain(
     action: NativeFluidAction,
     out: &mut Option<NativeFluidStack>,
 ) {
-    let Some(mut state) = fluid_state(game, pos) else {
+    let Some(mut state) = game.with_level(|_, level, _| fluid_state(level, pos)) else {
         return;
     };
     let selected;
@@ -776,12 +776,12 @@ fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
                 amount,
                 components: Compound::new(),
             };
-            if game.native_fluid_fill_stack(&dim, pos, None, &fluid, NativeFluidAction::Simulate)
+            if game.with_level(|_, level, _| level.native_fluid_fill_stack(&dim, pos, None, &fluid, NativeFluidAction::Simulate))
                 != amount
             {
                 return true;
             }
-            game.native_fluid_fill_stack(&dim, pos, None, &fluid, NativeFluidAction::Execute);
+            game.with_level(|_, level, _| level.native_fluid_fill_stack(&dim, pos, None, &fluid, NativeFluidAction::Execute));
             if !game.creative {
                 if held.count == 1 {
                     *game.held_mut() = Some(remainder);
@@ -795,7 +795,7 @@ fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
             true
         }
         "minecraft:bucket" => {
-            let Some(tanks) = game.native_fluid_view(&dim, pos, None) else {
+            let Some(tanks) = game.with_level(|_, level, _| level.native_fluid_view(&dim, pos, None)) else {
                 return true;
             };
             for tank in tanks {
@@ -815,13 +815,13 @@ fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
                     continue;
                 }
                 fluid.amount = amount;
-                game.native_fluid_drain_stack(
+                game.with_level(|_, level, _| level.native_fluid_drain_stack(
                     &dim,
                     pos,
                     None,
                     &NativeFluidDrain::Exact(fluid),
                     NativeFluidAction::Execute,
-                );
+                ));
                 if !game.creative {
                     game.consume_held();
                     give_container(game, pos, filled);
@@ -831,13 +831,13 @@ fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
             true // GenericItemFilling claims even a refused/insufficient bucket.
         }
         "minecraft:sponge" => game
-            .native_fluid_drain_stack(
+            .with_level(|_, level, _| level.native_fluid_drain_stack(
                 &dim,
                 pos,
                 None,
                 &NativeFluidDrain::Any(i32::MAX),
                 NativeFluidAction::Execute,
-            )
+            ))
             .is_some(),
         _ => false,
     }

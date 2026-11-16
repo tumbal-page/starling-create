@@ -57,9 +57,7 @@ pub(in crate::game) fn entity(game: &mut Game<'_>, hand: Hand) -> bool {
             .remote_object_hit(false)
             .is_some_and(|object| object.distance < distance && game.before_block(object.distance))
         || game.remote_mob_takes(index, hand)
-        || !game.with_level(|_, level, _| {
-            burner::entity_reacts(level, index, hand)
-        })
+        || !burner::entity_reacts(game, index, hand)
     {
         return false;
     }
@@ -73,9 +71,7 @@ pub(in crate::game) fn entity(game: &mut Game<'_>, hand: Hand) -> bool {
         location: [0.0, 1.0, 0.0],
         secondary: game.keys.contains(&winit::keyboard::KeyCode::ShiftLeft),
     }));
-    let predicted = game.with_level(|_, level, _| {
-        burner::predict_entity(level, index, hand)
-    });
+    let predicted = burner::predict_entity(game, index, hand);
     debug_assert!(predicted);
     true // Create's FAIL ends the item turn without an arm swing.
 }

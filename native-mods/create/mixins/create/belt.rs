@@ -1144,31 +1144,21 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
         let stack = &item.stack;
         let target = self.target();
         if self.game.native_block(target) == ID {
-            let Some((controller, index)) = self.game.with_level(|_, level, _| {
-                node_data(level, target)
-            }) else {
+            let Some((controller, index)) = node_data(self.game, target) else {
                 return stack.clone();
             };
-            let Some(mut contents) = self.game.with_level(|_, level, _| {
-                controller_inventory(level, controller)
-            }) else {
+            let Some(mut contents) = controller_inventory(self.game, controller) else {
                 return stack.clone();
             };
-            let b = match self.game.with_level(|_, level, _| {
-                let Some(BlockEntity::Mod(e)) =
-                    level.world.block_entities.get(&(controller[0], controller[1], controller[2]))
-                else {
-                    return None;
-                };
-                Some(belt(level, controller, e, number(&e.nbt, "Speed")))
-            }) {
-                Some(b) => b,
-                None => return stack.clone(),
+            let b = match self.game.world.block_entities.get(&(controller[0], controller[1], controller[2])) {
+                Some(BlockEntity::Mod(e)) => Some(belt(self.game, controller, e, number(&e.nbt, "Speed"))),
+                _ => None,
+            };
+            let Some(b) = b else {
+                return stack.clone();
             };
             if contents.insert_direct(b, index, item, from, true, false) {
-                self.game.with_level(|_, level, _| {
-                    save_controller(level, controller, &mut contents);
-                });
+                save_controller(self.game, controller, &mut contents);
                 return Stack {
                     count: 0,
                     ..stack.clone()

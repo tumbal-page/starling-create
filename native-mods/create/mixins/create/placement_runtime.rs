@@ -314,6 +314,8 @@ pub(super) fn destroy(game: &mut Game<'_>, pos: [i32; 3], canceled: &mut bool) {
 
 fn level_axis(game: &Game<'_>, p: [i32; 3]) -> Axis {
     let state = game
+        .pack
+        .assets
         .registry
         .state(game.world.block(p[0], p[1], p[2]))
         .unwrap();
