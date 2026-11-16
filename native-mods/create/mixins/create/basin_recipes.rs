@@ -338,7 +338,7 @@ impl rules::Context<basin::Key, fluids::Key> for Context<'_, '_> {
     }
 }
 pub(super) fn matching(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     basin: &mut basin::Basin,
     recipe: &Recipe,
@@ -360,7 +360,7 @@ pub(super) fn matching(
         .success()
 }
 pub(super) fn choose(
-    game: &mut Game<'_>,
+    game: &mut GameLevel<'_>,
     pos: Pos,
     basin: &mut basin::Basin,
     operator: Operator,
@@ -404,7 +404,7 @@ pub(super) fn choose(
     found.sort_by_key(|r| std::cmp::Reverse(r.inputs.len()));
     found.into_iter().next()
 }
-pub(super) fn apply(game: &mut Game<'_>, pos: Pos, recipe: Option<&Recipe>) -> bool {
+pub(super) fn apply(game: &mut GameLevel<'_>, pos: Pos, recipe: Option<&Recipe>) -> bool {
     let Some(recipe) = recipe else {
         return false;
     };

@@ -78,7 +78,7 @@ fn neighbors(
 }
 
 pub(super) fn placement(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     state: BlockStateId,
     context: &PlacementContext,
 ) -> Option<BlockStateId> {
@@ -93,7 +93,7 @@ pub(super) fn placement(
 }
 
 pub(super) fn shape(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     state: BlockStateId,
     direction: horizon_core::geometry::Direction,
     neighbor: BlockStateId,

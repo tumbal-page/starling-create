@@ -156,7 +156,9 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
                 for stack in drops {
                     give(game, stack, pos);
                 }
-                crate::game::create_port_sounds::wrench(game, pos, true);
+                game.with_level(|_, level, _| {
+                    crate::game::create_port_sounds::wrench(level, pos, true);
+                });
             }
             return true;
         }
@@ -167,11 +169,13 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
         } else {
             block.as_str()
         };
-        if secondary(game) {
+            if secondary(game) {
             if block == "create:large_water_wheel" {
                 let mut canceled = false;
                 super::create_port_placement::destroy(game, pos, &mut canceled);
-                super::create_port_sounds::wrench(game, pos, true);
+                game.with_level(|_, level, _| {
+                    crate::game::create_port_sounds::wrench(level, pos, true);
+                });
                 return true;
             }
             if block.ends_with("encased_shaft") {
@@ -200,14 +204,18 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
                     });
                 }
             }
-            crate::game::create_port_sounds::wrench(game, pos, true);
+            game.with_level(|_, level, _| {
+                crate::game::create_port_sounds::wrench(level, pos, true);
+            });
         } else if block == "create:large_water_wheel" {
             return false;
         } else if let Some(face) = Direction::from_vector(face) {
             let before_rotation = game.world.block(pos[0], pos[1], pos[2]);
             if block == "create:encased_chain_drive" {
                 if super::create_port_chain::wrench(game, pos, face) {
-                    crate::game::create_port_sounds::wrench(game, pos, false);
+                    game.with_level(|_, level, _| {
+                        crate::game::create_port_sounds::wrench(level, pos, false);
+                    });
                 }
             } else if let Some(axis) = game.native_block_property(pos, "axis") {
                 let axis = match axis.as_str() {
@@ -231,7 +239,9 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
                     },
                 );
                 if changed {
-                    crate::game::create_port_sounds::wrench(game, pos, false);
+                    game.with_level(|_, level, _| {
+                        crate::game::create_port_sounds::wrench(level, pos, false);
+                    });
                 }
             } else if let Some(direction) = game.native_block_property(pos, "facing")
                 && (block != "create:mechanical_press" || face.axis() == Axis::Y)
@@ -245,7 +255,9 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
                     "facing",
                     direction.clockwise(face.axis()).name(),
                 ) {
-                    crate::game::create_port_sounds::wrench(game, pos, false);
+                    game.with_level(|_, level, _| {
+                        crate::game::create_port_sounds::wrench(level, pos, false);
+                    });
                 }
             }
             if game.world.block(pos[0], pos[1], pos[2]) != before_rotation

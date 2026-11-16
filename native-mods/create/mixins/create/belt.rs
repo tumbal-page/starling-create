@@ -612,7 +612,9 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: Pos, _face: Pos) -> bool {
         });
         save_controller(game, controller, &mut inventory);
         if !taken.is_empty() {
-            super::create_port_sounds::pickup(game, pos);
+            game.with_level(|_, level, _| {
+                super::create_port_sounds::pickup(level, pos);
+            });
         }
         for stack in taken {
             return_to_player(game, pos, stack);

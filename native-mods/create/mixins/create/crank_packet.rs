@@ -6,10 +6,8 @@ fn create_crank_packet(
     kind: i32,
     tag: &horizon_world::nbt::Tag,
 ) {
-    game.with_level(|_, level, _| {
-        crate::game::create_port_press_client::packet(level, pos, kind, tag);
-        crate::game::create_port_inventory_packet::packet(level, pos, kind, tag);
-        crate::game::create_port_burner::packet(level, pos, kind, tag);
-        crate::game::create_port_nativeaudio::crank_packet(level, pos, kind, tag);
-    });
+    crate::game::create_port_press_client::packet(game, pos, kind, tag);
+    crate::game::create_port_inventory_packet::packet(game, pos, kind, tag);
+    crate::game::create_port_burner::packet(game, pos, kind, tag);
+    crate::game::create_port_nativeaudio::crank_packet(game, pos, kind, tag);
 }

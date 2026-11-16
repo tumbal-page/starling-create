@@ -297,7 +297,7 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: Pos) -> bool {
     }
     true
 }
-pub(super) fn analog(game: &Game<'_>, state: BlockStateId, out: &mut i32) {
+pub(super) fn analog(game: &GameLevel<'_>, state: BlockStateId, out: &mut i32) {
     if game.native_state_block(state) == Some(BLOCK) {
         *out = game
             .registry

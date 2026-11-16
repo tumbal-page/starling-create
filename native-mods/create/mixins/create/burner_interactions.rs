@@ -22,7 +22,7 @@ enum Action {
 }
 
 /// Only the base clone ID; the caller retains its normal Ctrl-pick NBT path.
-pub(super) fn clone_item(game: &Game<'_>, pos: Pos) -> Option<&'static str> {
+pub(super) fn clone_item(game: &GameLevel<'_>, pos: Pos) -> Option<&'static str> {
     match game.native_block(pos).as_str() {
         LIT => Some(EMPTY),
         BLOCK => Some(

@@ -4,16 +4,14 @@
 // Selected AllSoundEvents composite registrations. Their wrapped event gains
 // and pitches apply on top of each call's gain and pitch.
 use crate::game::Game;
-fn event(game: &mut Game<'_>, pos: [i32; 3], sound: &str, volume: f32, pitch: f32) {
+fn event(game: &mut GameLevel<'_>, pos: [i32; 3], sound: &str, volume: f32, pitch: f32) {
     let at = pos.map(|v| f64::from(v) + 0.5);
-    game.with_level(|_, level, _| {
-        level.native_play_sound(sound, at, 4, volume, pitch);
-    });
+    game.native_play_sound(sound, at, 4, volume, pitch);
     if std::env::var_os("CREATE_HORIZON_TRACE").is_some() {
         log::info!("Create sound: {sound} {pos:?} volume={volume} pitch={pitch}");
     }
 }
-pub(super) fn press(game: &mut Game<'_>, pos: [i32; 3], speed: f32) {
+pub(super) fn press(game: &mut GameLevel<'_>, pos: [i32; 3], speed: f32) {
     if game.native_block([pos[0], pos[1] - 2, pos[2]]) == "create:belt" {
         event(game, pos, "minecraft:block.wool.hit", 0.75, 1.0);
         event(game, pos, "minecraft:entity.item.break", 0.15, 0.75);
@@ -29,13 +27,13 @@ pub(super) fn press(game: &mut Game<'_>, pos: [i32; 3], speed: f32) {
     );
     event(game, pos, "minecraft:entity.item.break", 0.5 * 0.5, pitch);
 }
-pub(super) fn depot(game: &mut Game<'_>, pos: [i32; 3]) {
+pub(super) fn depot(game: &mut GameLevel<'_>, pos: [i32; 3]) {
     event(game, pos, "create:depot_slide", 0.125, 1.5);
 }
-pub(super) fn pickup(game: &mut Game<'_>, pos: [i32; 3]) {
+pub(super) fn pickup(game: &mut GameLevel<'_>, pos: [i32; 3]) {
     event(game, pos, "minecraft:entity.item.pickup", 0.2, 1.0);
 }
-pub(super) fn wrench(game: &mut Game<'_>, pos: [i32; 3], remove: bool) {
+pub(super) fn wrench(game: &mut GameLevel<'_>, pos: [i32; 3], remove: bool) {
     if remove {
         event(game, pos, "create:wrench_remove", 0.25, 0.75);
         event(game, pos, "minecraft:block.netherite_block.hit", 0.25, 0.75);

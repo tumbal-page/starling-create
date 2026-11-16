@@ -420,11 +420,12 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3], ca
     };
     let uuid = game.native_acting_id();
     if !taken.is_empty() {
-        crate::game::create_port_sounds::pickup(game, pos);
+        game.with_level(|_, level, _| {
+            crate::game::create_port_sounds::pickup(level, pos);
+        });
     }
     for stack in taken {
         if let Some(rest) = game.native_give_stack(uuid, stack)
-            && let Some(player) = game.native_player()
         {
             game.spawn_item(
                 rest,
@@ -437,7 +438,9 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3], ca
     // Read the hand after returning the old stack: Inventory.add may have
     // merged equal items into it. Creative players also empty their hand.
     if put {
-        crate::game::create_port_sounds::depot(game, pos);
+        game.with_level(|_, level, _| {
+            crate::game::create_port_sounds::depot(level, pos);
+        });
         let incoming = game.held_mut().take();
         game.native_with_mod_block_entity(pos, |e| {
             e.items[0] = incoming;
@@ -1147,7 +1150,9 @@ pub(super) fn tick(game: &mut Game<'_>, pos: [i32; 3], entity: &mut ModBlockEnti
                         Tag::List(vec![horizon_items::item_nbt::item_to_nbt(&item)]),
                     )]));
                 }
-                crate::game::create_port_sounds::press(game, pos, rpm);
+                game.with_level(|_, level, _| {
+                    crate::game::create_port_sounds::press(level, pos, rpm);
+                });
                 if let Some((input, output)) = world_plan {
                     crate::game::create_port_world_items::press(game, input, output);
                 }

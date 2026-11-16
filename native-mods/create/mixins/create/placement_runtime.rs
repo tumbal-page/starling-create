@@ -43,7 +43,7 @@ fn horizontal(yaw: f32) -> Direction {
     ][((f64::from(yaw) / 90.0 + 0.5).floor() as i64 & 3) as usize]
 }
 pub(super) fn state(
-    game: &Game<'_>,
+    game: &GameLevel<'_>,
     mut state: BlockStateId,
     ctx: &PlacementContext,
     answer: &mut Option<Option<BlockStateId>>,
@@ -386,7 +386,7 @@ fn state_shaft_port(state: &horizon_world::chunk::BlockState, face: Direction) -
     }
 }
 
-pub(super) fn level_ports(game: &Game<'_>, pos: [i32; 3]) -> [bool; 6] {
+pub(super) fn level_ports(game: &GameLevel<'_>, pos: [i32; 3]) -> [bool; 6] {
     Direction::ALL.map(|d| {
         let delta = d.vector();
         let p: [i32; 3] = std::array::from_fn(|i| pos[i] + delta[i]);
