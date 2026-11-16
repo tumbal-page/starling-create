@@ -3046,7 +3046,7 @@ impl Game<'_> {
     /// block's lower north-west corner, in blocks; `draw` also has the partial
     /// tick, the game time and the block's light. API 71.
     pub(super) fn native_block_entity_submit(
-        &mut self,
+        &self,
         pos: [i32; 3],
         block: &str,
         state: BlockStateId,
@@ -3071,7 +3071,7 @@ impl Game<'_> {
     /// set an infinite value for one never culled. Asked once a frame for each
     /// within 64 blocks whose chunk is drawn. API 71.
     pub(super) fn native_block_entity_render_bounding_box(
-        &mut self,
+        &self,
         pos: [i32; 3],
         block: &str,
         state: BlockStateId,
