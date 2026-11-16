@@ -1095,9 +1095,7 @@ impl WorldHooks<'_, '_> {
 impl Hooks<ItemStack> for WorldHooks<'_, '_> {
     fn processor(&mut self, segment: i32) -> Option<bool> {
         let p = at(self.origin, self.belt.facing, self.belt.slope, segment);
-        Some(self.game.with_level(|_, level, _| {
-            super::create_port_belt_press::available(level, [p[0], p[1] + 2, p[2]])
-        }))
+        Some(super::create_port_belt_press::available(self.game, [p[0], p[1] + 2, p[2]]))
     }
     fn processing_blocked(&mut self, segment: i32) -> bool {
         let p = at(self.origin, self.belt.facing, self.belt.slope, segment);
@@ -1112,9 +1110,7 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
         segment: i32,
     ) -> transport::ProcessingUpdate<ItemStack> {
         let p = at(self.origin, self.belt.facing, self.belt.slope, segment);
-        self.game.with_level(|_, level, _| {
-            super::create_port_belt_press::received(level, [p[0], p[1] + 2, p[2]], item)
-        })
+        super::create_port_belt_press::received(self.game, [p[0], p[1] + 2, p[2]], item)
     }
     fn held_update(
         &mut self,
@@ -1122,9 +1118,7 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
         segment: i32,
     ) -> transport::ProcessingUpdate<ItemStack> {
         let p = at(self.origin, self.belt.facing, self.belt.slope, segment);
-        self.game.with_level(|_, level, _| {
-            super::create_port_belt_press::held(level, [p[0], p[1] + 2, p[2]], item)
-        })
+        super::create_port_belt_press::held(self.game, [p[0], p[1] + 2, p[2]], item)
     }
     fn ending(&mut self, _positive: bool) -> Ending {
         let target = self.target();
