@@ -4,7 +4,5 @@ fn motor_release(
     button: i32,
     canceled: &mut bool,
 ) {
-    game.with_level(|_, level, _| {
-        crate::game::create_port_motor_value_ui::mouse_release(level, screen, button, canceled);
-    });
+    crate::game::create_port_motor_value_ui::mouse_release(game, screen, button, canceled);
 }

@@ -4,7 +4,5 @@ fn motor_key_release(
     key: &str,
     canceled: &mut bool,
 ) {
-    game.with_level(|_, level, _| {
-        crate::game::create_port_motor_value_ui::key_release(level, screen, key, canceled);
-    });
+    crate::game::create_port_motor_value_ui::key_release(game, screen, key, canceled);
 }

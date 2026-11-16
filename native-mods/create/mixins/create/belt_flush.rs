@@ -1,6 +1,4 @@
 // Pinned raw tick_lan boundary: normal networking serializes changed BEs here.
 fn create_belt_processing_flush(game: &mut crate::game::Game<'_>) {
-    game.with_level(|_, level, _| {
-        crate::game::create_port_belt::flush_processing(level);
-    });
+    crate::game::create_port_belt::flush_processing(game);
 }

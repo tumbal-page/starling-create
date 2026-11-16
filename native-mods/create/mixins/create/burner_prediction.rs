@@ -12,13 +12,9 @@ pub(in crate::game) fn block(game: &mut Game<'_>, hand: Hand) -> bool {
     }
     let held = game.with_hand(hand, |g| g.held().cloned());
     let Some(hit) = game.pick() else { return false };
-    let lifecycle = game.with_level(|_, level, _| {
-        burner::reacts(level, hit.pos, held.as_ref())
-    });
+    let lifecycle = burner::reacts(game, hit.pos, held.as_ref());
     let fuel = game.with_hand(hand, |g| {
-        g.with_level(|_, level, _| {
-            super::super::create_port_burner::reacts(level, hit.pos)
-        })
+        super::super::create_port_burner::reacts(g, hit.pos)
     });
     if !lifecycle && !fuel {
         return false;
@@ -39,13 +35,9 @@ pub(in crate::game) fn block(game: &mut Game<'_>, hand: Hand) -> bool {
     }
     let predicted = game.with_hand(hand, |g| {
         if lifecycle {
-            g.with_level(|_, level, _| {
-                burner::predict_block(level, hit.pos, held.as_ref())
-            })
+            burner::predict_block(g, hit.pos, held.as_ref())
         } else {
-            g.with_level(|_, level, _| {
-                super::super::create_port_burner::predict_client(level, hit.pos)
-            })
+            super::super::create_port_burner::predict_client(g, hit.pos)
         }
     });
     debug_assert!(predicted);

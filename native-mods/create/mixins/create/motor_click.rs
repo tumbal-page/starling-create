@@ -4,7 +4,5 @@ fn motor_click(
     button: i32,
     canceled: &mut bool,
 ) {
-    game.with_level(|_, level, _| {
-        crate::game::create_port_motor_value_ui::mouse_press(level, screen, button, canceled);
-    });
+    crate::game::create_port_motor_value_ui::mouse_press(game, screen, button, canceled);
 }

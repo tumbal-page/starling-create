@@ -5,8 +5,6 @@ fn create_burner_sync_world(game: &mut crate::game::Game<'_>, phase: crate::mod_
             | crate::mod_api::WorldPhase::WorldCloseFinal
             | crate::mod_api::WorldPhase::WorldCloseFailed
     ) {
-        game.with_level(|_, level, _| {
-            crate::game::create_port_burner_sync::clear(level);
-        });
+        crate::game::create_port_burner_sync::clear(game);
     }
 }
