@@ -1094,10 +1094,9 @@ impl WorldHooks<'_, '_> {
 impl Hooks<ItemStack> for WorldHooks<'_, '_> {
     fn processor(&mut self, segment: i32) -> Option<bool> {
         let p = at(self.origin, self.belt.facing, self.belt.slope, segment);
-        Some(super::create_port_belt_press::available(
-            self.game,
-            [p[0], p[1] + 2, p[2]],
-        ))
+        Some(self.game.with_level(|_, level, _| {
+            super::create_port_belt_press::available(level, [p[0], p[1] + 2, p[2]])
+        }))
     }
     fn processing_blocked(&mut self, segment: i32) -> bool {
         let p = at(self.origin, self.belt.facing, self.belt.slope, segment);
@@ -1112,7 +1111,9 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
         segment: i32,
     ) -> transport::ProcessingUpdate<ItemStack> {
         let p = at(self.origin, self.belt.facing, self.belt.slope, segment);
-        super::create_port_belt_press::received(self.game, [p[0], p[1] + 2, p[2]], item)
+        self.game.with_level(|_, level, _| {
+            super::create_port_belt_press::received(level, [p[0], p[1] + 2, p[2]], item)
+        })
     }
     fn held_update(
         &mut self,
@@ -1120,7 +1121,9 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
         segment: i32,
     ) -> transport::ProcessingUpdate<ItemStack> {
         let p = at(self.origin, self.belt.facing, self.belt.slope, segment);
-        super::create_port_belt_press::held(self.game, [p[0], p[1] + 2, p[2]], item)
+        self.game.with_level(|_, level, _| {
+            super::create_port_belt_press::held(level, [p[0], p[1] + 2, p[2]], item)
+        })
     }
     fn ending(&mut self, _positive: bool) -> Ending {
         let target = self.target();
@@ -1146,10 +1149,14 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
         let stack = &item.stack;
         let target = self.target();
         if self.game.native_block(target) == ID {
-            let Some((controller, index)) = node_data(self.game, target) else {
+            let Some((controller, index)) = self.game.with_level(|_, level, _| {
+                node_data(level, target)
+            }) else {
                 return stack.clone();
             };
-            let Some(mut contents) = controller_inventory(self.game, controller) else {
+            let Some(mut contents) = self.game.with_level(|_, level, _| {
+                controller_inventory(level, controller)
+            }) else {
                 return stack.clone();
             };
             let Some(BlockEntity::Mod(e)) =
@@ -1160,9 +1167,13 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
             else {
                 return stack.clone();
             };
-            let b = belt(self.game, controller, e, number(&e.nbt, "Speed"));
+            let b = self.game.with_level(|_, level, _| {
+                belt(level, controller, e, number(&e.nbt, "Speed"))
+            });
             if contents.insert_direct(b, index, item, from, true, false) {
-                save_controller(self.game, controller, &mut contents);
+                self.game.with_level(|_, level, _| {
+                    save_controller(level, controller, &mut contents);
+                });
                 return Stack {
                     count: 0,
                     ..stack.clone()
@@ -1190,7 +1201,9 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
                 })
                 .unwrap_or(false);
             if moved {
-                super::create_port_sounds::depot(self.game, target);
+                self.game.with_level(|_, level, _| {
+                    super::create_port_sounds::depot(level, target);
+                });
                 self.game.native_block_entity_sync(target);
                 Stack {
                     count: stack.count - inserted.stack.count,

@@ -497,7 +497,9 @@ impl fan::TransportedContext<ItemStack> for BeltContext<'_, '_> {
         stack: &create_engine::transport::Stack<ItemStack>,
         kind: Type,
     ) -> bool {
-        plan(self.game, &super::create_port_belt::game_stack(stack), kind).is_some()
+        self.game.with_level(|_, level, _| {
+            plan(level, &super::create_port_belt::game_stack(stack), kind).is_some()
+        })
     }
     fn process(
         &mut self,
@@ -505,21 +507,29 @@ impl fan::TransportedContext<ItemStack> for BeltContext<'_, '_> {
         kind: Type,
     ) -> Option<Vec<create_engine::transport::Stack<ItemStack>>> {
         let input = super::create_port_belt::game_stack(stack);
-        let outputs = plan(self.game, &input, kind)?;
+        let outputs = self.game.with_level(|_, level, _| {
+            plan(level, &input, kind)
+        })?;
         Some(
-            roll(
-                self.game,
-                &input,
-                &outputs,
-                matches!(kind, Type::Splashing | Type::Haunting),
-            )
+            self.game.with_level(|_, level, _| {
+                roll(
+                    level,
+                    &input,
+                    &outputs,
+                    matches!(kind, Type::Splashing | Type::Haunting),
+                )
+            })
             .into_iter()
-            .map(|output| super::create_port_belt::core_stack(self.game, output))
+            .map(|output| self.game.with_level(|_, level, _| {
+                super::create_port_belt::core_stack(level, output)
+            }))
             .collect(),
         )
     }
     fn similar_angle(&mut self, input: &create_engine::transport::Stack<ItemStack>) -> i32 {
-        super::create_port_belt::angle(self.game, &input.payload)
+        self.game.with_level(|_, level, _| {
+            super::create_port_belt::angle(level, &input.payload)
+        })
     }
 }
 fn process_belt(game: &mut GameLevel<'_>, pos: [i32; 3], kind: Type) {

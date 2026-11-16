@@ -5,8 +5,10 @@ fn create_use_on(
     face: [i32; 3],
     claimed: &mut bool,
 ) {
-    crate::game::create_port::use_on(game, stack, pos, face);
-    if crate::game::create_port_placement::alias(game, stack, pos, face) {
-        *claimed = true;
-    }
+    game.with_level(|_, level, _| {
+        crate::game::create_port::use_on(level, stack, pos, face);
+        if crate::game::create_port_placement::alias(level, stack, pos, face) {
+            *claimed = true;
+        }
+    });
 }

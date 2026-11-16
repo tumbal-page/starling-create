@@ -3,7 +3,9 @@
 fn create_depot_changed(game: &mut crate::game::Game<'_>, pos: (i32, i32, i32)) {
     // Successful native/automation slot mutations reach this callback. Basin
     // only raises its contents flag; its next BE tick schedules the operator.
-    crate::game::create_port_basin::notify_contents(game, [pos.0, pos.1, pos.2]);
+    game.with_level(|_, level, _| {
+        crate::game::create_port_basin::notify_contents(level, [pos.0, pos.1, pos.2]);
+    });
     let cleared = if let Some(crate::containers::BlockEntity::Mod(entity)) =
         game.world.block_entities.get_mut(&pos)
         && entity.id == "create:depot"
