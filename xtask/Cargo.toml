@@ -12,5 +12,8 @@ quote = "1"
 serde_json = "1"
 horizon-theme = { path = "../crates/horizon-theme" }
 
+[dev-dependencies]
+horizon-client = { path = "../crates/horizon-client" }
+
 [lints]
 workspace = true
