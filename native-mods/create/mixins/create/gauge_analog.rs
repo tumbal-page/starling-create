@@ -1,5 +1,3 @@
-use crate::game::GameLevel;
-
 fn create_gauge_analog(
     game: &crate::game::GameLevel<'_>,
     pos: horizon_core::position::BlockPos,

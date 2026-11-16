@@ -1,5 +1,3 @@
-use crate::game::GameLevel;
-
 fn create_placement_state(
     game: &crate::game::GameLevel<'_>,
     state: horizon_world::registry::BlockStateId,

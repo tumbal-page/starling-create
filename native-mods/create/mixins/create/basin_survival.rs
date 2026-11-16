@@ -1,5 +1,3 @@
-use crate::game::GameLevel;
-
 fn create_basin_mixer_survival(
     game: &crate::game::GameLevel<'_>,
     pos: horizon_core::position::BlockPos,

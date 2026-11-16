@@ -1,5 +1,3 @@
-use crate::game::GameLevel;
-
 fn create_burner_clone_item(
     game: &crate::game::GameLevel<'_>,
     pos: [i32; 3],
