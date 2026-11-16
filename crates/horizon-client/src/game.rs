@@ -4580,6 +4580,7 @@ impl Game<'_> {
     }
     /// Fill a block's fluid tanks with `stack` through `side` (None = any side).
     /// Returns accepted millibuckets. `Simulate` is read-only; `Execute` mutates.
+    #[allow(dead_code)]
     pub(super) fn native_fluid_fill_stack(
         &mut self,
         _dimension: &str,
@@ -4595,6 +4596,7 @@ impl Game<'_> {
     /// Drain from a block's fluid tanks through `side` (None = any side)
     /// matching `drain`. Returns the drained stack, or None. `Simulate` is
     /// read-only; `Execute` mutates.
+    #[allow(dead_code)]
     pub(super) fn native_fluid_drain_stack(
         &mut self,
         _dimension: &str,
@@ -4620,6 +4622,7 @@ impl Game<'_> {
         false
     }
     /// Damages the item held in the given equipment slot by `amount`.
+    #[allow(dead_code)]
     pub(super) fn damage_held_in_slot(
         &mut self,
         amount: u32,
