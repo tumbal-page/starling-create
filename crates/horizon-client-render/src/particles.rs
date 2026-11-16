@@ -4257,8 +4257,9 @@ impl ParticleEngine {
                 p.behaviour = Behaviour::DragonBreath { hit_ground };
             }
             Behaviour::Controlled { translucent: _ } => {
-                if let Some(controller) = p.controller.as_mut() {
+                if let Some(mut controller) = p.controller.take() {
                     let update = controller.tick(p, level);
+                    p.controller = Some(controller);
                     if let Some(frame) = update.frame {
                         self.set_sprite_frame(p, frame);
                     }
