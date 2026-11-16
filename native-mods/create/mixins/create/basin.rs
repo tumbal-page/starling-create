@@ -821,7 +821,7 @@ fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
                     None,
                     &NativeFluidDrain::Exact(fluid),
                     NativeFluidAction::Execute,
-                ));
+                );
                 if !game.creative {
                     game.consume_held();
                     give_container(game, pos, filled);
