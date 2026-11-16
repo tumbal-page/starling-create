@@ -329,16 +329,14 @@ impl rules::Context<basin::Key, fluids::Key> for Context<'_, '_> {
             .get(&unit.key.0.item)?
             .crafting_remainder
             .clone()?;
-        Some(self.game.with_level(|_, level, _| {
-            basin::core_stack(level, &ItemStack::new(&item, 1))
-        }))
+        Some(basin::core_stack(self.game, &ItemStack::new(&item, 1)))
     }
     fn random(&mut self) -> f32 {
         self.game.world.random.next_float()
     }
 }
 pub(super) fn matching(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: Pos,
     basin: &mut basin::Basin,
     recipe: &Recipe,
@@ -360,7 +358,7 @@ pub(super) fn matching(
         .success()
 }
 pub(super) fn choose(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: Pos,
     basin: &mut basin::Basin,
     operator: Operator,
@@ -404,7 +402,7 @@ pub(super) fn choose(
     found.sort_by_key(|r| std::cmp::Reverse(r.inputs.len()));
     found.into_iter().next()
 }
-pub(super) fn apply(game: &mut GameLevel<'_>, pos: Pos, recipe: Option<&Recipe>) -> bool {
+pub(super) fn apply(game: &mut Game<'_>, pos: Pos, recipe: Option<&Recipe>) -> bool {
     let Some(recipe) = recipe else {
         return false;
     };

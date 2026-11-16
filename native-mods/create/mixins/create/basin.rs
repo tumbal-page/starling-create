@@ -4,7 +4,7 @@
 // Create 6.0.10 BasinBlockEntity/BasinInventory/BasinRenderer adapter.
 // Heat-aware, unfiltered, downward basin; two canonical water/lava tank halves.
 // Unknown tanks, filters and spouts remain unsupported; never discard them.
-use crate::game::Game;
+use crate::game::{Game, GameLevel};
 use super::{
     create_port_fluid_codec as fluids, native_block_entity_draw::BlockEntityDraw,
 };
@@ -91,7 +91,7 @@ pub(super) fn reset(reload: bool) {
 
 /// BasinInventory.whenContentsChanged/notifyChangeOfContents only raises a
 /// flag. The next ordinary Basin tick schedules its operator checker.
-pub(super) fn notify_contents(game: &GameLevel<'_>, pos: Pos) {
+pub(super) fn notify_contents(game: &Game<'_>, pos: Pos) {
     let Some(BlockEntity::Mod(entity)) = game.world.block_entities.get(&(pos[0], pos[1], pos[2]))
     else {
         return;
@@ -334,7 +334,7 @@ pub(super) fn native_stack(item: &rules::Item<Key>) -> ItemStack {
         ..item.key.0.clone()
     }
 }
-pub(super) fn read(game: &GameLevel<'_>, pos: Pos) -> Option<Basin> {
+pub(super) fn read(game: &Game<'_>, pos: Pos) -> Option<Basin> {
     let BlockEntity::Mod(entity) = game.world.block_entities.get(&(pos[0], pos[1], pos[2]))? else {
         return None;
     };
@@ -363,7 +363,7 @@ pub(super) fn read(game: &GameLevel<'_>, pos: Pos) -> Option<Basin> {
         ..Basin::default()
     })
 }
-pub(super) fn heat(game: &GameLevel<'_>, pos: Pos) -> rules::Heat {
+pub(super) fn heat(game: &Game<'_>, pos: Pos) -> rules::Heat {
     let Some(BlockEntity::Mod(entity)) = game.world.block_entities.get(&(pos[0], pos[1], pos[2]))
     else {
         return rules::Heat::None;
@@ -380,7 +380,7 @@ pub(super) fn heat(game: &GameLevel<'_>, pos: Pos) -> rules::Heat {
         server.bind(entity.revision());
         server.heat.get_or_read(|| {
             let state = game.world.block(pos[0], pos[1] - 1, pos[2]);
-            let Some(state) = game.registry.state(state) else {
+            let Some(state) = game.pack.assets.registry.state(state) else {
                 return Some(rules::Heat::None);
             };
             let blaze = state

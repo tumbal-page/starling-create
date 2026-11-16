@@ -98,9 +98,7 @@ impl BeltPressContext<ItemStack> for Context<'_, '_> {
                 Tag::List(vec![horizon_items::item_nbt::item_to_nbt(&original)]),
             )]));
         });
-        Some(vec![self.game.with_level(|_, level, _| {
-            belt::core_stack(level, output)
-        })])
+        Some(vec![belt::core_stack(self.game, output)])
     }
     fn upright(&mut self, stack: &Stack<ItemStack>) -> bool {
         self.game.with_level(|_, level, _| {

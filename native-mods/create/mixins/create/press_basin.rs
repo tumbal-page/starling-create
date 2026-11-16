@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: MIT
 // MechanicalPressBlockEntity's BasinOperating/PressingBehaviour server boundary,
 // Create ac0c444d9828da3453ae8cc65338e8de063286fb (6.0.10).
-use crate::game::GameLevel;
 use super::{
     Game, create_port_basin as basin,
     create_port_basin_recipes::{self as recipes, Operator, Recipe},
@@ -31,7 +30,7 @@ struct Running {
 thread_local! {
     static WORLDS: RefCell<SessionCache<BTreeMap<Pos, Running>>> = RefCell::new(SessionCache::default());
 }
-fn with_world<R>(game: &GameLevel<'_>, action: impl FnOnce(&mut BTreeMap<Pos, Running>) -> R) -> R {
+fn with_world<R>(game: &Game<'_>, action: impl FnOnce(&mut BTreeMap<Pos, Running>) -> R) -> R {
     WORLDS.with(|cache| {
         action(
             cache
@@ -45,12 +44,12 @@ pub(super) fn reset(reload: bool) {
         WORLDS.with(|cache| cache.borrow_mut().clear());
     }
 }
-pub(super) fn maintenance(game: &GameLevel<'_>) {
+pub(super) fn maintenance(game: &mut Game<'_>) {
     with_world(game, |world| {
         world.retain(|pos, _| game.world.loaded(pos[0], pos[2]) && game.native_block(*pos) == ID)
     });
 }
-pub(super) fn schedule(game: &mut GameLevel<'_>, pos: Pos) {
+pub(super) fn schedule(game: &mut Game<'_>, pos: Pos) {
     if game.native_block(pos) == ID {
         game.native_with_mod_block_entity(pos, |entity| {
             if entity.id == ID {
@@ -64,7 +63,7 @@ pub(super) fn on_speed_changed(entity: &mut ModBlockEntity, previous: f32, curre
         entity.nbt.insert("NeedsUpdate".into(), Tag::Byte(1));
     }
 }
-pub(super) fn basin_removed(game: &GameLevel<'_>, pos: Pos) {
+pub(super) fn basin_removed(game: &mut Game<'_>, pos: Pos) {
     let Some(crate::containers::BlockEntity::Mod(entity)) =
         game.world.block_entities.get(&(pos[0], pos[1], pos[2]))
     else {
@@ -99,7 +98,7 @@ fn start(entity: &mut ModBlockEntity, cycle: &mut PressCycle) {
 /// this tick and says whether the ordinary BE update should be synchronized.
 /// Called after resolving actual kinetic speed, while this BE is detached.
 pub(super) fn tick(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: Pos,
     entity: &mut ModBlockEntity,
     rpm: f32,
@@ -191,7 +190,9 @@ pub(super) fn tick(
                         "ParticleItems".into(),
                         Tag::List(particles),
                     )]));
-                    super::create_port_sounds::press(game, pos, rpm);
+                    game.with_level(|_, level, _| {
+                        super::create_port_sounds::press(level, pos, rpm);
+                    });
                     sync = true;
                 }
                 Action::Finished => {
