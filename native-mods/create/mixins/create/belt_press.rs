@@ -89,23 +89,31 @@ impl BeltPressContext<ItemStack> for Context<'_, '_> {
     }
     fn process(&mut self, input: &Transported<ItemStack>) -> Option<Vec<Stack<ItemStack>>> {
         let original = belt::game_stack(&input.stack);
-        let output = port::result(self.game, &original)?;
+        let output = self.game.with_level(|_, level, _| {
+            port::result(level, &original)
+        })?;
         self.game.native_with_mod_block_entity(self.pos, |entity| {
             entity.set_client_update_fields(Compound::from([(
                 "ParticleItems".into(),
                 Tag::List(vec![horizon_items::item_nbt::item_to_nbt(&original)]),
             )]));
         });
-        Some(vec![belt::core_stack(self.game, output)])
+        Some(vec![self.game.with_level(|_, level, _| {
+            belt::core_stack(level, output)
+        })])
     }
     fn upright(&mut self, stack: &Stack<ItemStack>) -> bool {
-        belt::upright(self.game, &stack.payload)
+        self.game.with_level(|_, level, _| {
+            belt::upright(level, &stack.payload)
+        })
     }
     fn create_angle(&mut self) -> i32 {
         CREATE_RANDOM.with(|random| random.borrow_mut().next_int_bound(360).unwrap_or(0))
     }
     fn on_source_copy(&mut self, input: &Stack<ItemStack>) {
-        let _ = belt::angle(self.game, &input.payload);
+        let _ = self.game.with_level(|_, level, _| {
+            belt::angle(level, &input.payload)
+        });
     }
 }
 pub(super) fn held(

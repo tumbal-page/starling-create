@@ -329,7 +329,9 @@ impl rules::Context<basin::Key, fluids::Key> for Context<'_, '_> {
             .get(&unit.key.0.item)?
             .crafting_remainder
             .clone()?;
-        Some(basin::core_stack(self.game, &ItemStack::new(&item, 1)))
+        Some(self.game.with_level(|_, level, _| {
+            basin::core_stack(level, &ItemStack::new(&item, 1))
+        }))
     }
     fn random(&mut self) -> f32 {
         self.game.world.random.next_float()
