@@ -4,7 +4,5 @@ fn create_schematic_command(
     command: &str,
     ran: &mut bool,
 ) {
-    game.with_level(|_, level, _| {
-        crate::game::create_port_schematic_runtime::command(level, player, command, ran);
-    });
+    crate::game::create_port_schematic_runtime::command(game, player, command, ran);
 }
