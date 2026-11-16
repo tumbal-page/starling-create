@@ -46,6 +46,8 @@ pub enum Attenuation {
 pub enum Ticking {
     /// Not tickable.
     No,
+    /// A compiled native owner updates this instance through `instance_mut`.
+    Native,
     /// `BiomeAmbientSoundsHandler.LoopSoundInstance`.
     BiomeLoop { fade: i32, direction: i32 },
     /// `UnderLiquidAmbientSoundInstance`.

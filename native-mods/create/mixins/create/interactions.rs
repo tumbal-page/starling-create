@@ -319,7 +319,9 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
         };
         if let Some(target) = target {
             switch(game, pos, target);
-            crate::game::create_port_sounds::casing(game, pos);
+            game.with_level(|_, level, _| {
+                crate::game::create_port_sounds::casing(level, pos);
+            });
             return true;
         }
     }
@@ -334,7 +336,9 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
             if consume {
                 game.consume_held();
             }
-            crate::game::create_port_sounds::casing(game, pos);
+            game.with_level(|_, level, _| {
+                crate::game::create_port_sounds::casing(level, pos);
+            });
         }
         return true;
     }

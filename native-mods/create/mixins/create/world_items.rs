@@ -39,7 +39,9 @@ pub(super) fn catch(game: &mut Game<'_>, pos: [i32; 3], entity: &mut ModBlockEnt
         rest.count -= accepted.count;
         if game.native_set_item_entity(&dim, dropped.id, rest) {
             entity.items[0] = Some(accepted);
-            crate::game::create_port_sounds::land(game, pos);
+            game.with_level(|_, level, _| {
+                crate::game::create_port_sounds::land(level, pos);
+            });
             break;
         }
     }

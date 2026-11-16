@@ -44,10 +44,10 @@ pub(super) fn wrench(game: &mut GameLevel<'_>, pos: [i32; 3], remove: bool) {
 }
 
 
-pub(super) fn casing(game: &mut Game<'_>, pos: [i32; 3]) {
+pub(super) fn casing(game: &mut GameLevel<'_>, pos: [i32; 3]) {
     event(game, pos, "minecraft:block.wood.place", 1.0, 0.8);
 }
 
-pub(super) fn land(game: &mut Game<'_>, pos: [i32; 3]) {
+pub(super) fn land(game: &mut GameLevel<'_>, pos: [i32; 3]) {
     event(game, pos, "create:depot_plop", 0.25, 1.25);
 }
