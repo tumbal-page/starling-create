@@ -10,7 +10,9 @@ use std::ops::{Deref, DerefMut};
 pub struct NativeWorldDraw {
     pub camera: [f64; 3],
     draw: BlockEntityDraw,
+    #[allow(dead_code)]
     patches: Vec<serde_json::Value>,
+    #[allow(dead_code)]
     profiles: Vec<serde_json::Value>,
 }
 impl Deref for NativeWorldDraw {
@@ -25,6 +27,7 @@ impl DerefMut for NativeWorldDraw {
     }
 }
 impl NativeWorldDraw {
+    #[allow(dead_code)]
     fn new(camera: [f64; 3], partial: f32, time: i64) -> Self {
         Self {
             camera,

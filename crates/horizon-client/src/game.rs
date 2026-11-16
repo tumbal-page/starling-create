@@ -3237,6 +3237,7 @@ struct Game<'a> {
     /// The local player as a model (third person, the inventory).
     player_model: Option<Mob>,
     /// Health damage catalog and player float IDs (`game/health.rs`).
+    #[allow(dead_code)]
     pub(super) health_resources: crate::health::HealthResources,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -4608,6 +4609,7 @@ impl Game<'_> {
     }
     /// Draws a still-fluid box under the current block-entity draw pose.
     /// Stub: fluid rendering not yet ported from Horizon.
+    #[allow(dead_code)]
     pub(super) fn native_draw_fluid_box(
         &self,
         _draw: &mut crate::game::native_block_entity_draw::BlockEntityDraw,
@@ -4633,6 +4635,7 @@ impl Game<'_> {
     }
     /// Draws a named standalone terrain model. Stub: model rendering not yet
     /// ported from Horizon.
+    #[allow(dead_code)]
     pub(super) fn native_draw_terrain_model(
         &self,
         _draw: &mut crate::game::native_block_entity_draw::BlockEntityDraw,
@@ -4643,11 +4646,13 @@ impl Game<'_> {
     }
     /// Returns the entity's saved NBT compound (minus `id`). Stub: entity NBT
     /// not yet ported from Horizon.
+    #[allow(dead_code)]
     pub(super) fn native_entity_nbt(&self, _entity: crate::mod_api::EntityRef) -> Option<Compound> {
         None
     }
     /// Draws a depth-tested world quad. Stub: world drawing not yet ported
     /// from Horizon.
+    #[allow(dead_code)]
     pub(super) fn native_world_quad(
         &self,
         _draw: &mut crate::mod_api::NativeWorldDraw,
@@ -4660,6 +4665,7 @@ impl Game<'_> {
     }
     /// Draws styled world text. Stub: world text drawing not yet ported from
     /// Horizon.
+    #[allow(dead_code)]
     pub(super) fn native_world_text(
         &self,
         _draw: &mut crate::mod_api::NativeWorldDraw,
