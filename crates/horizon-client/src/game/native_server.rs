@@ -7,7 +7,7 @@
 //! player's plain items: count, take, give. They act on the server's own
 //! players (the hub's: a dedicated server's, a LAN host's, single player's
 //! server thread's), never on a client's.
-use super::{Dim, Game, GameLevel, commands::execute, lan::LanHost};
+use super::{Dim, Game, commands::execute, lan::LanHost};
 // Their old home, for mixin code that names them here.
 pub(crate) use horizon_client::mod_api::{NativeCommand, NativeServerPlayer};
 use horizon_client::{items::ItemStack, lan::data::component_nbt, text::Text};

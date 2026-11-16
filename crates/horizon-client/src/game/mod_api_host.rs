@@ -269,3 +269,5 @@ impl horizon_client::mod_api::LevelWriteHost for LevelTicks<'_, &mut super::Game
             .native_send_particles(options, state, at, spread, speed, count)
     }
 }
+
+impl horizon_client::mod_api::Host for super::GameLevel<'_> {}

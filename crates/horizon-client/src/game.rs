@@ -405,7 +405,7 @@ use horizon_client::{
     light::LightTables,
     mesher::{MeshTables, Vertex},
     mobs::{Mob, MobType, MobTypes},
-    mod_api::{NativeFluidAction, NativeFluidDrain, NativeFluidStack, NativeModelRenderOptions},
+    mod_api::{NativeFluidAction, NativeFluidDrain, NativeFluidStack, NativeFluidRenderOptions},
     models,
     motion::{MotionEvent, MotionResources, PlayerMotion},
     mouse::{LookOptions, MouseLook},
@@ -437,6 +437,7 @@ use horizon_world::{
         Ticks, flags as level_flags,
     },
     registry::BlockStateId,
+    nbt::Compound,
 };
 pub use maps::{NativeMapDecoration, NativeMapInfo};
 pub use native_block_entity_draw::BlockEntityDraw;

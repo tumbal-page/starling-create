@@ -1,12 +1,6 @@
 //! A native mod's world-space text and textured quads, through the normal renderer.
-use super::{Game, native_block_entity_draw::BlockEntityDraw};
+use super::native_block_entity_draw::BlockEntityDraw;
 use glam::{DVec3, Mat4, Vec3};
-use horizon_client::{
-    gfx::Cull,
-    hud::{HudBatch, Rect, rgba},
-    mesher::Vertex,
-    text::Text,
-};
 use std::ops::{Deref, DerefMut};
 
 /// One world frame, independently of block entities or source blocks. Its pose
