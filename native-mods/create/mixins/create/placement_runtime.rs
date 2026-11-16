@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Vanilla placement remains responsible for obstruction, permissions and consumption.
 use crate::game::Game;
+use crate::game::GameLevel;
 use crate::items::ItemStack;
 use create_engine::{
     kinetics::Axis,

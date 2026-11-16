@@ -776,12 +776,12 @@ fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
                 amount,
                 components: Compound::new(),
             };
-            if game.with_level(|_, level, _| level.native_fluid_fill_stack(&dim, pos, None, &fluid, NativeFluidAction::Simulate))
+            if game.native_fluid_fill_stack(&dim, pos, None, &fluid, NativeFluidAction::Simulate)
                 != amount
             {
                 return true;
             }
-            game.with_level(|_, level, _| level.native_fluid_fill_stack(&dim, pos, None, &fluid, NativeFluidAction::Execute));
+            game.native_fluid_fill_stack(&dim, pos, None, &fluid, NativeFluidAction::Execute);
             if !game.creative {
                 if held.count == 1 {
                     *game.held_mut() = Some(remainder);
@@ -795,7 +795,7 @@ fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
             true
         }
         "minecraft:bucket" => {
-            let Some(tanks) = game.with_level(|_, level, _| level.native_fluid_view(&dim, pos, None)) else {
+            let Some(tanks) = game.native_fluid_view(&dim, pos, None) else {
                 return true;
             };
             for tank in tanks {
@@ -815,7 +815,7 @@ fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
                     continue;
                 }
                 fluid.amount = amount;
-                game.with_level(|_, level, _| level.native_fluid_drain_stack(
+                game.native_fluid_drain_stack(
                     &dim,
                     pos,
                     None,
@@ -831,13 +831,13 @@ fn bucket_click(game: &mut Game<'_>, pos: Pos, held: &ItemStack) -> bool {
             true // GenericItemFilling claims even a refused/insufficient bucket.
         }
         "minecraft:sponge" => game
-            .with_level(|_, level, _| level.native_fluid_drain_stack(
+            .native_fluid_drain_stack(
                 &dim,
                 pos,
                 None,
                 &NativeFluidDrain::Any(i32::MAX),
                 NativeFluidAction::Execute,
-            ))
+            )
             .is_some(),
         _ => false,
     }
@@ -1017,7 +1017,7 @@ fn draw_fluids(
             continue;
         }
         let next = x + (units / total).clamp(0.0, 1.0) * 12.0 / 16.0;
-        game.native_draw_fluid_box(
+        game.with_level(|_, level, _| level.native_draw_fluid_box(
             draw,
             &native_fluid(&fluid),
             [x, 2.0 / 16.0, 2.0 / 16.0, next, height, 14.0 / 16.0],
@@ -1028,7 +1028,7 @@ fn draw_fluids(
                 // This is explicit because Horizon stores block sprites in arrays.
                 uv_shrink_ratio: 4.0 / 2048.0,
             },
-        );
+        ));
         x = next;
     }
     height

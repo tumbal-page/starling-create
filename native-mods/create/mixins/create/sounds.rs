@@ -4,6 +4,7 @@
 // Selected AllSoundEvents composite registrations. Their wrapped event gains
 // and pitches apply on top of each call's gain and pitch.
 use crate::game::Game;
+use crate::game::GameLevel;
 fn event(game: &mut GameLevel<'_>, pos: [i32; 3], sound: &str, volume: f32, pitch: f32) {
     let at = pos.map(|v| f64::from(v) + 0.5);
     game.native_play_sound(sound, at, 4, volume, pitch);

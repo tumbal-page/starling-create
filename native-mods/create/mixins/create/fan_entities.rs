@@ -428,7 +428,7 @@ fn affect_mob(game: &mut Game<'_>, index: usize, kind: ProcessingType) {
     let at = [mob.position.x, mob.position.y, mob.position.z];
     let damage = effects
         .damage
-        .map(|(damage, amount)| game.with_level(|_, level, _| (damage_kind(level, damage), amount)));
+        .map(|(damage, amount)| (damage_kind(game, damage), amount));
     let mut added = Vec::new();
     {
         let mob = &mut game.mobs[index];
@@ -478,7 +478,7 @@ fn affect_mob(game: &mut Game<'_>, index: usize, kind: ProcessingType) {
         Horse::None => {}
     }
 }
-fn damage_kind(game: &GameLevel<'_>, damage: DamageType) -> DamageKind {
+fn damage_kind(game: &Game<'_>, damage: DamageType) -> DamageKind {
     if damage == DamageType::Drown {
         return DamageKind::Drown;
     }
