@@ -130,7 +130,7 @@ pub(super) fn state(
                 .into_iter()
                 .all(|delta| {
                     let p: [i32; 3] = std::array::from_fn(|i| pos[i] + delta[i]);
-                    game.res.facts()
+                    game.facts
                         .get(game.world.block(p[0], p[1], p[2]))
                         .replaceable
                 })
