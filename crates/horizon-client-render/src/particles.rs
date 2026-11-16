@@ -1720,7 +1720,7 @@ impl ParticleEngine {
         if minimal || !distance.is_finite() || distance > 1024.0 {
             return None;
         }
-        let (set, _) = *self.mod_sets.get(name)?;
+        let set = *self.mod_sets.get(name)?;
         let mut random = LegacyRandom::new(self.seeds.next_long());
         let mut particle = Particle::at(&mut random, ParticleType::Smoke, position);
         particle.random = random;
@@ -4542,9 +4542,19 @@ pub struct ParticleUpdate {
 /// Owned behavior for a compiled native particle. Cloning a particle clones its
 /// controller state. Do not retain world references; inspect `level` each tick.
 pub trait ParticleController: Clone + Debug + Send + Sync + 'static {
+    /// Clone this controller as a trait object.
+    fn clone_box(&self) -> Box<dyn ParticleController>;
+    fn clone_box(&self) -> Box<dyn ParticleController> {
+        Box::new(self.clone())
+    }
     /// Call `particle.advance_age()` for ordinary lifetime/interpolation, or
     /// explicitly maintain those fields for an overridden source tick.
     fn tick(&mut self, particle: &mut Particle, level: &ParticleLevel<'_>) -> ParticleUpdate;
+}
+impl Clone for Box<dyn ParticleController> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
 }
 
 #[cfg(test)]
