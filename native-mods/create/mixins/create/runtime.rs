@@ -1,7 +1,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Game-side adapter. The engine crate contains the portable algorithms.
-use crate::game::{Game, GameLevel, native_block_entity_draw::BlockEntityDraw};
+use crate::game::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::{
     containers::{BlockEntity, ModBlockEntity, ModContainer},
     items::ItemStack,
@@ -172,7 +172,7 @@ pub(super) fn number(nbt: &Compound, key: &str) -> f32 {
 /// KineticBlockEntity.getSpeed: debug stepping a frozen world does not expose
 /// theoretical network RPM to a machine. Keep the stored Speed/port diagnostics
 /// intact so unfreezing resumes the same network instead of propagating zero.
-pub(super) fn running_speed(game: &GameLevel<'_>, nbt: &Compound) -> f32 {
+pub(super) fn running_speed(game: &Game<'_>, nbt: &Compound) -> f32 {
     if game.clock.frozen() {
         0.0
     } else {
@@ -207,7 +207,7 @@ pub(super) fn stack_maximum_override(stack: &ItemStack) -> Option<u32> {
     (1..=99).contains(&value).then_some(value as u32)
 }
 
-pub(super) fn stack_maximum(game: &GameLevel<'_>, stack: &ItemStack) -> u32 {
+pub(super) fn stack_maximum(game: &Game<'_>, stack: &ItemStack) -> u32 {
     stack_maximum_override(stack)
         .unwrap_or_else(|| game.native_max_stack_size(&stack.item).unwrap_or(64))
 }
@@ -216,7 +216,7 @@ thread_local! {
     static PLACEMENT_HIT: std::cell::Cell<Option<([i32; 3], [i32; 3])>> = const { std::cell::Cell::new(None) };
 }
 
-pub(super) fn use_on(game: &GameLevel<'_>, stack: &ItemStack, pos: [i32; 3], face: [i32; 3]) {
+pub(super) fn use_on(game: &Game<'_>, stack: &ItemStack, pos: [i32; 3], face: [i32; 3]) {
     PLACEMENT_HIT.set((game.native_on("create") && owns(&stack.item)).then_some((pos, face)));
 }
 
@@ -253,7 +253,7 @@ pub(super) fn nearest(yaw: f32, pitch: f32) -> Direction {
     }
 }
 
-pub(super) fn placed(game: &mut GameLevel<'_>, stack: &ItemStack, pos: [i32; 3]) {
+pub(super) fn placed(game: &mut Game<'_>, stack: &ItemStack, pos: [i32; 3]) {
     let Some((clicked, face)) = PLACEMENT_HIT.take() else {
         return;
     };
@@ -331,12 +331,12 @@ pub(super) fn inventory_supported(entity: &ModBlockEntity) -> bool {
     })
 }
 
-pub(super) fn inventory_blocked(game: &GameLevel<'_>, pos: [i32; 3]) -> bool {
+pub(super) fn inventory_blocked(game: &Game<'_>, pos: [i32; 3]) -> bool {
     matches!(game.world.block_entities.get(&(pos[0],pos[1],pos[2])),
         Some(BlockEntity::Mod(entity)) if !inventory_supported(entity))
 }
 
-pub(super) fn depot_reacts(game: &GameLevel<'_>, pos: [i32; 3], face: [i32; 3]) -> bool {
+pub(super) fn depot_reacts(game: &Game<'_>, pos: [i32; 3], face: [i32; 3]) -> bool {
     if inventory_blocked(game, pos) {
         return false;
     }
@@ -367,7 +367,7 @@ pub(super) fn depot_reacts(game: &GameLevel<'_>, pos: [i32; 3], face: [i32; 3]) 
     true
 }
 
-pub(super) fn right_click(game: &mut GameLevel<'_>, pos: [i32; 3], face: [i32; 3], canceled: &mut bool) {
+pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3], canceled: &mut bool) {
     if inventory_blocked(game, pos) {
         *canceled = true;
         return;
@@ -536,7 +536,7 @@ fn facing(value: &str) -> [i32; 3] {
     }
 }
 
-pub(super) fn node(game: &GameLevel<'_>, pos: [i32; 3]) -> Option<Node> {
+pub(super) fn node(game: &Game<'_>, pos: [i32; 3]) -> Option<Node> {
     let block = game.native_block(pos);
     let axis_property = game.native_block_property(pos, "axis");
     let direction = facing(
@@ -715,7 +715,7 @@ pub(super) fn ingredient(json: &Value) -> Option<Value> {
         .map(|values| Value::Array(values.iter().filter_map(ingredient).collect()))
 }
 
-pub(super) fn result(game: &GameLevel<'_>, stack: &ItemStack) -> Option<ItemStack> {
+pub(super) fn result(game: &Game<'_>, stack: &ItemStack) -> Option<ItemStack> {
     for recipe in game.native_recipes_of_type("create:pressing") {
         let Some(inputs) = recipe.json["ingredients"].as_array() else {
             continue;
@@ -750,7 +750,7 @@ pub(super) fn result(game: &GameLevel<'_>, stack: &ItemStack) -> Option<ItemStac
     None
 }
 
-fn depot_input(game: &GameLevel<'_>, pos: [i32; 3]) -> Option<ItemStack> {
+fn depot_input(game: &Game<'_>, pos: [i32; 3]) -> Option<ItemStack> {
     if game.native_block(pos) != "create:depot" {
         return None;
     }
@@ -864,7 +864,7 @@ pub(super) fn apply_network(
     crate::game::create_port_press_basin::on_speed_changed(entity, old_rpm, rpm);
 }
 
-pub(super) fn tick(game: &mut GameLevel<'_>, pos: [i32; 3], entity: &mut ModBlockEntity) {
+pub(super) fn tick(game: &mut Game<'_>, pos: [i32; 3], entity: &mut ModBlockEntity) {
     let block = game.native_block(pos);
     if !owns(&block) {
         return;
@@ -1304,7 +1304,7 @@ fn orient(draw: &mut BlockEntityDraw, axis: Axis) {
 }
 
 pub(super) fn draw(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     pos: [i32; 3],
     block: &str,
     state: BlockStateId,

@@ -2,7 +2,6 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // WaterWheelBlockEntity and LargeWaterWheelBlock's physical structural ring.
-use crate::game::GameLevel;
 use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::containers::ModBlockEntity;
 use crate::game::create_port::{integer, number};
@@ -22,7 +21,7 @@ const STRUCTURE: &str = "create:water_wheel_structure";
 fn at(p: Pos, d: Pos) -> Pos {
     std::array::from_fn(|i| p[i] + d[i])
 }
-fn set(game: &mut GameLevel<'_>, pos: Pos, name: &str, facing: Option<Direction>) {
+fn set(game: &mut Game<'_>, pos: Pos, name: &str, facing: Option<Direction>) {
     let dim = game.dim.id().to_owned();
     if let Some(id) = game.pack.assets.registry.default_state(name) {
         game.native_set_block(&dim, pos, id, 3);
@@ -31,7 +30,7 @@ fn set(game: &mut GameLevel<'_>, pos: Pos, name: &str, facing: Option<Direction>
         }
     }
 }
-pub(super) fn replaceable(game: &GameLevel<'_>, p: Pos) -> bool {
+pub(super) fn replaceable(game: &Game<'_>, p: Pos) -> bool {
     game.res
         .facts()
         .get(game.world.block(p[0], p[1], p[2]))
@@ -49,7 +48,7 @@ fn required(axis: Axis) -> Vec<(Pos, Direction)> {
     }
     result
 }
-pub(super) fn master(game: &GameLevel<'_>, mut p: Pos) -> Option<Pos> {
+pub(super) fn master(game: &Game<'_>, mut p: Pos) -> Option<Pos> {
     for _ in 0..3 {
         let block = game.native_block(p);
         if block == "create:large_water_wheel" {
@@ -70,7 +69,7 @@ pub(super) fn master(game: &GameLevel<'_>, mut p: Pos) -> Option<Pos> {
     None
 }
 pub(super) fn tick(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: Pos,
     entity: &mut ModBlockEntity,
     block: &str,
@@ -180,7 +179,7 @@ impl FluidFlowWorld for Flow<'_, '_> {
         Ok(self.game.motion.fluids.sturdy(s, d))
     }
 }
-fn flow(game: &GameLevel<'_>, p: Pos) -> [f64; 3] {
+fn flow(game: &Game<'_>, p: Pos) -> [f64; 3] {
     if game.native_block(p) == "minecraft:bubble_column" {
         return [
             0.0,
@@ -202,7 +201,7 @@ fn flow(game: &GameLevel<'_>, p: Pos) -> [f64; 3] {
     [value.x, value.y, value.z]
 }
 pub(super) fn draw(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     pos: Pos,
     entity: &ModBlockEntity,
     draw: &mut BlockEntityDraw,

@@ -1057,6 +1057,17 @@ impl GameLevel<'_> {
         true
     }
 
+    /// The block at `pos` (`mymod:cable`; air where nothing is loaded).
+    pub(super) fn native_block(&self, pos: [i32; 3]) -> String {
+        let state = self.world.block(pos[0], pos[1], pos[2]);
+        self.facts.get(state).name.to_string()
+    }
+
+    /// Block property lookup (GameLevel fallback; Game has the full impl).
+    pub(super) fn native_block_property(&self, _pos: [i32; 3], _key: &str) -> Option<String> {
+        None
+    }
+
     /// A hopper at `pos` is about to pick up `count` of `item`. Set `cancel` to leave the dropped stack in the world. Server-side. 232.
     #[inline(always)]
     pub(super) fn native_hopper_pickup_item(
@@ -1760,46 +1771,6 @@ impl GameLevel<'_> {
         mod_api::dispatch_custom_fluid_tanks(self, mod_api::mods(), pos, side, out);
     }
 
-    /// Fill the declared custom fluid capability, returning the accepted amount.
-    pub(super) fn native_custom_fluid_fill(
-        &mut self,
-        pos: [i32; 3],
-        side: Option<Direction>,
-        resource: &NativeFluidStack,
-        action: NativeFluidAction,
-        out: &mut Option<i32>,
-    ) {
-        mod_api::dispatch_custom_fluid_fill(
-            self,
-            mod_api::mods(),
-            pos,
-            side,
-            resource,
-            action,
-            out,
-        );
-    }
-
-    /// Drain the declared custom fluid capability.
-    pub(super) fn native_custom_fluid_drain(
-        &mut self,
-        pos: [i32; 3],
-        side: Option<Direction>,
-        request: &NativeFluidDrain,
-        action: NativeFluidAction,
-        out: &mut Option<NativeFluidStack>,
-    ) {
-        mod_api::dispatch_custom_fluid_drain(
-            self,
-            mod_api::mods(),
-            pos,
-            side,
-            request,
-            action,
-            out,
-        );
-    }
-
     /// Opt a non-vanilla block into a state-aware block entity factory. API 572.
     pub(super) fn native_stateful_block_entity(&self, block: &str, stateful: &mut bool) {
         mod_api::dispatch_stateful_block_entity(self, mod_api::mods(), block, stateful);
@@ -1815,17 +1786,6 @@ impl GameLevel<'_> {
         mod_api::dispatch_block_entity_from_state(self, mod_api::mods(), block, properties, entity);
     }
 
-    /// A player interacts with a mob using an item. API 449.
-    pub(super) fn native_item_interact_mob(
-        &mut self,
-        entity: i32,
-        kind: &str,
-        stack: Option<&ItemStack>,
-        swing: &mut Option<bool>,
-    ) {
-        mod_api::dispatch_item_interact_mob(self, mod_api::mods(), entity, kind, stack, swing);
-    }
-
     /// A block's clone item before Ctrl+Pick adds block-entity components. API 448.
     pub(super) fn native_block_clone_item(
         &self,
@@ -1837,31 +1797,6 @@ impl GameLevel<'_> {
         mod_api::dispatch_block_clone_item(self, mod_api::mods(), block, pos, state, stack);
     }
 
-    /// A dropped item's vertical move clipped after collision response. API 456.
-    pub(super) fn native_item_after_vertical_collision(
-        &mut self,
-        dimension: &str,
-        client: bool,
-        entity: u32,
-        state: BlockStateId,
-        block_pos: [i32; 3],
-        item_pos: [f64; 3],
-        stack: &mut ItemStack,
-        discard: &mut bool,
-    ) {
-        mod_api::dispatch_item_after_vertical_collision(
-            self,
-            mod_api::mods(),
-            dimension,
-            client,
-            entity,
-            state,
-            block_pos,
-            item_pos,
-            stack,
-            discard,
-        );
-    }
 }
 
 /// The camera shake native mods ask for (`native_camera_shake`): turns in
@@ -8080,6 +8015,98 @@ impl Game<'_> {
         };
         let at = BlockPos::new(pos[0], pos[1], pos[2]);
         self.with_level(|b, level, ticks| b.set_block(level, ticks, at, id, flags))
+    }
+
+    /// Fill the declared custom fluid capability, returning the accepted amount.
+    pub(super) fn native_custom_fluid_fill(
+        &mut self,
+        pos: [i32; 3],
+        side: Option<Direction>,
+        resource: &NativeFluidStack,
+        action: NativeFluidAction,
+        out: &mut Option<i32>,
+    ) {
+        self.with_level(|_, level, _| {
+            mod_api::dispatch_custom_fluid_fill(
+                level,
+                mod_api::mods(),
+                pos,
+                side,
+                resource,
+                action,
+                out,
+            );
+        });
+    }
+
+    /// Drain the declared custom fluid capability.
+    pub(super) fn native_custom_fluid_drain(
+        &mut self,
+        pos: [i32; 3],
+        side: Option<Direction>,
+        request: &NativeFluidDrain,
+        action: NativeFluidAction,
+        out: &mut Option<NativeFluidStack>,
+    ) {
+        self.with_level(|_, level, _| {
+            mod_api::dispatch_custom_fluid_drain(
+                level,
+                mod_api::mods(),
+                pos,
+                side,
+                request,
+                action,
+                out,
+            );
+        });
+    }
+
+    /// A player interacts with a mob using an item. API 449.
+    pub(super) fn native_item_interact_mob(
+        &mut self,
+        entity: i32,
+        kind: &str,
+        stack: Option<&ItemStack>,
+        swing: &mut Option<bool>,
+    ) {
+        self.with_level(|_, level, _| {
+            mod_api::dispatch_item_interact_mob(
+                level,
+                mod_api::mods(),
+                entity,
+                kind,
+                stack,
+                swing,
+            );
+        });
+    }
+
+    /// A dropped item's vertical move clipped after collision response. API 456.
+    pub(super) fn native_item_after_vertical_collision(
+        &mut self,
+        dimension: &str,
+        client: bool,
+        entity: u32,
+        state: BlockStateId,
+        block_pos: [i32; 3],
+        item_pos: [f64; 3],
+        stack: &mut ItemStack,
+        discard: &mut bool,
+    ) {
+        self.with_level(|_, level, _| {
+            mod_api::dispatch_item_after_vertical_collision(
+                level,
+                mod_api::mods(),
+                dimension,
+                client,
+                entity,
+                state,
+                block_pos,
+                item_pos,
+                stack,
+                discard,
+            );
+        });
     }
     /// The block at `pos` changed its comparator output
     /// (`native_analog_output`) without changing its state: the comparators

@@ -2,7 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Vanilla placement remains responsible for obstruction, permissions and consumption.
-use crate::game::{Game, GameLevel};
+use crate::game::Game;
 use crate::items::ItemStack;
 use create_engine::{
     kinetics::Axis,
@@ -27,7 +27,7 @@ fn direction(d: D) -> Direction {
         D::East => Direction::East,
     }
 }
-fn ports(game: &GameLevel<'_>, pos: [i32; 3]) -> [bool; 6] {
+fn ports(game: &Game<'_>, pos: [i32; 3]) -> [bool; 6] {
     Direction::ALL.map(|d| {
         let delta = d.vector();
         super::create_port::node(game, std::array::from_fn(|i| pos[i] + delta[i]))
@@ -43,7 +43,7 @@ fn horizontal(yaw: f32) -> Direction {
     ][((f64::from(yaw) / 90.0 + 0.5).floor() as i64 & 3) as usize]
 }
 pub(super) fn state(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     mut state: BlockStateId,
     ctx: &PlacementContext,
     answer: &mut Option<Option<BlockStateId>>,
@@ -130,7 +130,7 @@ pub(super) fn state(
                 .into_iter()
                 .all(|delta| {
                     let p: [i32; 3] = std::array::from_fn(|i| pos[i] + delta[i]);
-                    game.facts
+                    game.res.facts()
                         .get(game.world.block(p[0], p[1], p[2]))
                         .replaceable
                 })
@@ -174,7 +174,7 @@ pub(super) fn state(
     *answer = Some(Some(state));
 }
 
-pub(super) fn alias(game: &mut GameLevel<'_>, stack: &ItemStack, pos: [i32; 3], face: [i32; 3]) -> bool {
+pub(super) fn alias(game: &mut Game<'_>, stack: &ItemStack, pos: [i32; 3], face: [i32; 3]) -> bool {
     if !game.native_on("create")
         || !matches!(
             stack.item.as_ref(),
@@ -271,7 +271,7 @@ pub(super) fn alias(game: &mut GameLevel<'_>, stack: &ItemStack, pos: [i32; 3], 
     true
 }
 
-pub(super) fn destroy(game: &mut GameLevel<'_>, pos: [i32; 3], canceled: &mut bool) {
+pub(super) fn destroy(game: &mut Game<'_>, pos: [i32; 3], canceled: &mut bool) {
     if !game.native_on("create") {
         return;
     }
@@ -312,7 +312,7 @@ pub(super) fn destroy(game: &mut GameLevel<'_>, pos: [i32; 3], canceled: &mut bo
     *canceled = true;
 }
 
-fn level_axis(game: &GameLevel<'_>, p: [i32; 3]) -> Axis {
+fn level_axis(game: &Game<'_>, p: [i32; 3]) -> Axis {
     let state = game
         .registry
         .state(game.world.block(p[0], p[1], p[2]))
@@ -386,7 +386,7 @@ fn state_shaft_port(state: &horizon_world::chunk::BlockState, face: Direction) -
     }
 }
 
-pub(super) fn level_ports(game: &GameLevel<'_>, pos: [i32; 3]) -> [bool; 6] {
+pub(super) fn level_ports(game: &Game<'_>, pos: [i32; 3]) -> [bool; 6] {
     Direction::ALL.map(|d| {
         let delta = d.vector();
         let p: [i32; 3] = std::array::from_fn(|i| pos[i] + delta[i]);

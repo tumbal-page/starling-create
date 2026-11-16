@@ -6,7 +6,6 @@
 // normal world writes, component-preserving NBT, controller lifetime and drawing.
 // Casings/dyes and passengers remain separate integrations. Processor callbacks
 // use the portable transport result/queue contract.
-use crate::game::GameLevel;
 use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::{
     containers::{BlockEntity, ModBlockEntity},
@@ -65,10 +64,10 @@ thread_local! {
             .map_or(0, |time| time.as_nanos() as i64)
     ));
 }
-fn simulates(game: &GameLevel<'_>) -> bool {
+fn simulates(game: &Game<'_>) -> bool {
     game.serving.is_some() || game.options.dedicated.is_some()
 }
-fn with_state<R>(game: &GameLevel<'_>, f: impl FnOnce(&mut State) -> R) -> R {
+fn with_state<R>(game: &Game<'_>, f: impl FnOnce(&mut State) -> R) -> R {
     STATE.with(|cell| {
         let mut cache = cell.borrow_mut();
         // swap_level exchanges dimension contents in place. The address alone
@@ -103,7 +102,7 @@ fn direction(name: &str) -> Direction {
         .find(|d| d.name() == name)
         .unwrap_or(Direction::North)
 }
-fn facing(game: &GameLevel<'_>, pos: Pos) -> Direction {
+fn facing(game: &Game<'_>, pos: Pos) -> Direction {
     direction(
         game.native_block_property(pos, "facing")
             .as_deref()
@@ -119,7 +118,7 @@ fn slope_name(slope: Slope) -> &'static str {
         Slope::Sideways => "sideways",
     }
 }
-fn slope(game: &GameLevel<'_>, pos: Pos) -> Slope {
+fn slope(game: &Game<'_>, pos: Pos) -> Slope {
     match game.native_block_property(pos, "slope").as_deref() {
         Some("upward") => Slope::Upward,
         Some("downward") => Slope::Downward,
@@ -136,7 +135,7 @@ fn part_name(part: Part) -> &'static str {
         Part::Pulley => "pulley",
     }
 }
-fn part(game: &GameLevel<'_>, pos: Pos) -> Part {
+fn part(game: &Game<'_>, pos: Pos) -> Part {
     match game.native_block_property(pos, "part").as_deref() {
         Some("start") => Part::Start,
         Some("end") => Part::End,
@@ -144,7 +143,7 @@ fn part(game: &GameLevel<'_>, pos: Pos) -> Part {
         _ => Part::Middle,
     }
 }
-fn axis(game: &GameLevel<'_>, pos: Pos) -> Axis {
+fn axis(game: &Game<'_>, pos: Pos) -> Axis {
     if game.native_block(pos) == ID {
         if slope(game, pos) == Slope::Sideways {
             Axis::Y
@@ -193,7 +192,7 @@ fn at(origin: Pos, facing: Direction, slope: Slope, index: i32) -> Pos {
     };
     std::array::from_fn(|i| origin[i] + v[i] * index)
 }
-fn next(game: &GameLevel<'_>, pos: Pos, forward: bool) -> Option<Pos> {
+fn next(game: &Game<'_>, pos: Pos, forward: bool) -> Option<Pos> {
     if matches!(
         (part(game, pos), forward),
         (Part::Start, false) | (Part::End, true)
@@ -219,7 +218,7 @@ fn metadata(e: &mut ModBlockEntity, controller: Pos, length: usize, index: usize
         .or_insert(Tag::String("NONE".into()));
     e.nbt.entry("Covered".into()).or_insert(Tag::Byte(0));
 }
-pub(super) fn node_data(game: &GameLevel<'_>, pos: Pos) -> Option<(Pos, i32)> {
+pub(super) fn node_data(game: &Game<'_>, pos: Pos) -> Option<(Pos, i32)> {
     if let Some(BlockEntity::Mod(e)) = game.world.block_entities.get(&(pos[0], pos[1], pos[2])) {
         return Some((
             pos_tag(&e.nbt, "Controller").unwrap_or(pos),
@@ -237,7 +236,7 @@ pub(super) fn node_data(game: &GameLevel<'_>, pos: Pos) -> Option<(Pos, i32)> {
         })
     })
 }
-fn belt(game: &GameLevel<'_>, pos: Pos, e: &ModBlockEntity, rpm: f32) -> Belt {
+fn belt(game: &Game<'_>, pos: Pos, e: &ModBlockEntity, rpm: f32) -> Belt {
     Belt {
         rpm,
         facing: facing(game, pos),
@@ -251,7 +250,7 @@ pub(super) fn game_stack(stack: &Stack<ItemStack>) -> ItemStack {
         ..stack.payload.clone()
     }
 }
-pub(super) fn core_stack(game: &GameLevel<'_>, stack: ItemStack) -> Stack<ItemStack> {
+pub(super) fn core_stack(game: &Game<'_>, stack: ItemStack) -> Stack<ItemStack> {
     let maximum = super::create_port::stack_maximum(game, &stack);
     Stack {
         count: stack.count,
@@ -259,7 +258,7 @@ pub(super) fn core_stack(game: &GameLevel<'_>, stack: ItemStack) -> Stack<ItemSt
         payload: ItemStack { count: 1, ..stack },
     }
 }
-fn return_to_player(game: &mut GameLevel<'_>, pos: Pos, stack: ItemStack) {
+fn return_to_player(game: &mut Game<'_>, pos: Pos, stack: ItemStack) {
     let player = game.native_acting_id();
     if let Some(rest) = game.native_give_stack(player, stack) {
         // Inventory.placeItemBackInInventory -> Player.drop(stack, false).
@@ -270,7 +269,7 @@ fn return_to_player(game: &mut GameLevel<'_>, pos: Pos, stack: ItemStack) {
         }
     }
 }
-fn read_item(game: &GameLevel<'_>, tag: &Tag) -> Option<Moving> {
+fn read_item(game: &Game<'_>, tag: &Tag) -> Option<Moving> {
     let Tag::Compound(nbt) = tag else { return None };
     let stack = horizon_items::item_nbt::item_from_nbt(nbt.get(&"Item".into())?)?;
     let mut item = Moving::new(core_stack(game, stack), int(nbt, "Angle"));
@@ -335,7 +334,7 @@ fn write_item(item: &Moving) -> Tag {
     }
     Tag::Compound(nbt)
 }
-fn read_inventory(game: &GameLevel<'_>, e: &ModBlockEntity) -> Contents {
+fn read_inventory(game: &Game<'_>, e: &ModBlockEntity) -> Contents {
     let Some(Tag::Compound(nbt)) = e.nbt.get(&"Inventory".into()) else {
         return Contents::default();
     };
@@ -366,7 +365,7 @@ fn write_inventory(e: &mut ModBlockEntity, inventory: &mut Contents) {
         e.nbt.insert("Inventory".into(), tag);
     }
 }
-fn remember(game: &GameLevel<'_>, chain: Chain, inventory: Contents, rpm: f32) {
+fn remember(game: &Game<'_>, chain: Chain, inventory: Contents, rpm: f32) {
     if let Some(controller) = chain.segments.first().map(|first| first.pos) {
         with_state(game, |s| {
             s.chains.insert(
@@ -380,7 +379,7 @@ fn remember(game: &GameLevel<'_>, chain: Chain, inventory: Contents, rpm: f32) {
         });
     }
 }
-fn initialize(game: &mut GameLevel<'_>, pos: Pos, entity: &mut ModBlockEntity) -> bool {
+fn initialize(game: &mut Game<'_>, pos: Pos, entity: &mut ModBlockEntity) -> bool {
     let mut controller = pos;
     for _ in 0..1000 {
         if game.native_block(controller) != ID {
@@ -443,7 +442,7 @@ fn initialize(game: &mut GameLevel<'_>, pos: Pos, entity: &mut ModBlockEntity) -
     true
 }
 /// Called before the ordinary kinetic solve, while this entity is in hand.
-pub(super) fn prepare(game: &mut GameLevel<'_>, pos: Pos, entity: &mut ModBlockEntity) -> bool {
+pub(super) fn prepare(game: &mut Game<'_>, pos: Pos, entity: &mut ModBlockEntity) -> bool {
     if entity.id != ID {
         return false;
     }
@@ -454,7 +453,7 @@ pub(super) fn prepare(game: &mut GameLevel<'_>, pos: Pos, entity: &mut ModBlockE
     }
     true
 }
-fn state(game: &GameLevel<'_>, block: &str, properties: &[(&str, &str)]) -> Option<BlockStateId> {
+fn state(game: &Game<'_>, block: &str, properties: &[(&str, &str)]) -> Option<BlockStateId> {
     let registry = game.pack.assets.registry;
     let default = registry.default_state(block)?;
     let mut descriptor = registry.state(default)?.clone();
@@ -465,7 +464,7 @@ fn state(game: &GameLevel<'_>, block: &str, properties: &[(&str, &str)]) -> Opti
     }
     registry.id(&descriptor)
 }
-fn pulley(game: &GameLevel<'_>, pos: Pos) -> Pulley {
+fn pulley(game: &Game<'_>, pos: Pos) -> Pulley {
     let rpm = super::create_port::node(game, pos)
         .map(|node| super::create_port_kinetic_runtime::network(game, node, 0).speed(pos))
         .unwrap_or(0.0);
@@ -477,7 +476,7 @@ fn pulley(game: &GameLevel<'_>, pos: Pos) -> Pulley {
         shaft: game.native_block(pos) == "create:shaft",
     }
 }
-pub(super) fn right_click(game: &mut GameLevel<'_>, pos: Pos, _face: Pos) -> bool {
+pub(super) fn right_click(game: &mut Game<'_>, pos: Pos, _face: Pos) -> bool {
     if !game.native_on("create") {
         return false;
     }
@@ -649,7 +648,7 @@ pub(super) fn right_click(game: &mut GameLevel<'_>, pos: Pos, _face: Pos) -> boo
     }
     false
 }
-fn controller_inventory(game: &GameLevel<'_>, controller: Pos) -> Option<Contents> {
+fn controller_inventory(game: &Game<'_>, controller: Pos) -> Option<Contents> {
     match game
         .world
         .block_entities
@@ -661,7 +660,7 @@ fn controller_inventory(game: &GameLevel<'_>, controller: Pos) -> Option<Content
         _ => None,
     }
 }
-fn authoritative_inventory(game: &GameLevel<'_>, controller: Pos, entity: &ModBlockEntity) -> Contents {
+fn authoritative_inventory(game: &Game<'_>, controller: Pos, entity: &ModBlockEntity) -> Contents {
     let live = with_state(game, |s| {
         if let Some(owner) = s.processing.get(&controller)
             && owner.committed.as_ref() == entity.nbt.get(&"Inventory".into())
@@ -674,7 +673,7 @@ fn authoritative_inventory(game: &GameLevel<'_>, controller: Pos, entity: &ModBl
     });
     live.unwrap_or_else(|| read_inventory(game, entity))
 }
-fn save_controller(game: &mut GameLevel<'_>, controller: Pos, inventory: &mut Contents) {
+fn save_controller(game: &mut Game<'_>, controller: Pos, inventory: &mut Contents) {
     game.native_with_mod_block_entity(controller, |e| write_inventory(e, inventory));
     with_state(game, |s| {
         s.processing.remove(&controller);
@@ -684,7 +683,7 @@ fn save_controller(game: &mut GameLevel<'_>, controller: Pos, inventory: &mut Co
     });
     game.native_block_entity_sync(controller);
 }
-fn stage_processing(game: &mut GameLevel<'_>, controller: Pos, inventory: Contents) {
+fn stage_processing(game: &mut Game<'_>, controller: Pos, inventory: Contents) {
     // Canonical NBT is always save-safe. Its flushed clone is also what an
     // outbound tag must show, without exposing queued outputs to another
     // handler in this simulation pass.
@@ -714,7 +713,7 @@ fn stage_processing(game: &mut GameLevel<'_>, controller: Pos, inventory: Conten
 }
 /// The pinned tick_lan HEAD hook calls this before outgoing block-entity tags.
 /// LevelTickPost runs after networking and would expose a stale frame instead.
-pub(super) fn flush_processing(game: &mut GameLevel<'_>) {
+pub(super) fn flush_processing(game: &mut Game<'_>) {
     if !simulates(game) {
         return;
     }
@@ -754,11 +753,11 @@ pub(super) fn flush_processing(game: &mut GameLevel<'_>) {
 /// other machine adapters. Source results queue conversions/removals; equal
 /// output stacks alone do not replace a transported record or its animation.
 pub(super) fn apply_to_each_within(
-    game: &mut GameLevel<'_>,
+    game: &mut Game<'_>,
     pos: Pos,
     maximum_distance: f32,
     mut apply: impl FnMut(
-        &mut GameLevel<'_>,
+        &mut Game<'_>,
         &mut Transported<ItemStack>,
     ) -> Option<transport::TransportedResult<ItemStack>>,
 ) -> usize {
@@ -787,7 +786,7 @@ pub(super) fn apply_to_each_within(
     changed
 }
 pub(super) fn processing_positions(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     pos: Pos,
     maximum_distance: f32,
 ) -> Vec<[f64; 3]> {
@@ -818,7 +817,7 @@ pub(super) fn processing_positions(
         .map(|item| shape.world_position(controller, item.position))
         .collect()
 }
-fn eject(game: &mut GameLevel<'_>, controller: Pos, belt: Belt, item: Moving) {
+fn eject(game: &mut Game<'_>, controller: Pos, belt: Belt, item: Moving) {
     let mut at = belt.world_position(controller, item.position);
     let motion = belt.ejection_velocity();
     let length = motion.iter().map(|x| x * x).sum::<f64>().sqrt();
@@ -830,7 +829,7 @@ fn eject(game: &mut GameLevel<'_>, controller: Pos, belt: Belt, item: Moving) {
     at[1] += 6.0 / 16.0;
     game.spawn_item(game_stack(&item.stack), at, motion, 10);
 }
-fn dismantle(game: &mut GameLevel<'_>, controller: Pos, known: KnownChain, removed: Option<Pos>) {
+fn dismantle(game: &mut Game<'_>, controller: Pos, known: KnownChain, removed: Option<Pos>) {
     let b = Belt {
         rpm: known.rpm,
         facing: known.chain.facing,
@@ -891,7 +890,7 @@ fn dismantle(game: &mut GameLevel<'_>, controller: Pos, known: KnownChain, remov
 /// Rebuild ownership from saved entities when no tick has populated the cache
 /// (a chunk reload, or destruction before that dimension's first belt tick).
 /// Do not follow guessed metadata into unloaded chunks or a crossing chain.
-fn restored_chain(game: &GameLevel<'_>, pos: Pos) -> Option<(Pos, KnownChain)> {
+fn restored_chain(game: &Game<'_>, pos: Pos) -> Option<(Pos, KnownChain)> {
     let expected_facing = facing(game, pos);
     let expected_slope = slope(game, pos);
     let valid = |p: Pos| {
@@ -977,7 +976,7 @@ fn restored_chain(game: &GameLevel<'_>, pos: Pos) -> Option<(Pos, KnownChain)> {
         },
     ))
 }
-fn eject_controller_without_chain(game: &mut GameLevel<'_>, pos: Pos) {
+fn eject_controller_without_chain(game: &mut Game<'_>, pos: Pos) {
     let Some(BlockEntity::Mod(entity)) = game.world.block_entities.get(&(pos[0], pos[1], pos[2]))
     else {
         return;
@@ -1003,7 +1002,7 @@ fn eject_controller_without_chain(game: &mut GameLevel<'_>, pos: Pos) {
 }
 /// Before ordinary player destruction: retain normal clicked-block loot, restore
 /// the other pulleys and eject the controller's actual inventory exactly once.
-pub(super) fn destroy(game: &mut GameLevel<'_>, pos: Pos) {
+pub(super) fn destroy(game: &mut Game<'_>, pos: Pos) {
     if game.native_block(pos) != ID {
         return;
     }
@@ -1023,7 +1022,7 @@ pub(super) fn destroy(game: &mut GameLevel<'_>, pos: Pos) {
     }
 }
 /// Catch non-player removal through normal world changes; never ticket chunks.
-pub(super) fn maintenance(game: &mut GameLevel<'_>) {
+pub(super) fn maintenance(game: &mut Game<'_>) {
     if !simulates(game) {
         return;
     }
@@ -1224,7 +1223,7 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
         }
     }
 }
-pub(super) fn upright(game: &GameLevel<'_>, stack: &ItemStack) -> bool {
+pub(super) fn upright(game: &Game<'_>, stack: &ItemStack) -> bool {
     let tags = &game.res.items().item_tags;
     let in_tag = |tag: &str| {
         tags.get(tag)
@@ -1233,14 +1232,14 @@ pub(super) fn upright(game: &GameLevel<'_>, stack: &ItemStack) -> bool {
     (game.native_item_fluid(stack).is_some() || in_tag("create:upright_on_belt"))
         && !in_tag("create:not_upright_on_belt")
 }
-pub(super) fn angle(game: &GameLevel<'_>, stack: &ItemStack) -> i32 {
+pub(super) fn angle(game: &Game<'_>, stack: &ItemStack) -> i32 {
     if upright(game, stack) {
         180
     } else {
         ITEM_RANDOM.with(|random| random.borrow_mut().next_int_bound(360).unwrap_or(0))
     }
 }
-fn capture(game: &mut GameLevel<'_>, origin: Pos, belt: Belt, contents: &mut Contents) {
+fn capture(game: &mut Game<'_>, origin: Pos, belt: Belt, contents: &mut Contents) {
     if !belt.slope.transports() {
         return;
     }
@@ -1279,7 +1278,7 @@ fn capture(game: &mut GameLevel<'_>, origin: Pos, belt: Belt, contents: &mut Con
     }
 }
 /// Called after effective RPM is written, including overstress.
-pub(super) fn tick(game: &mut GameLevel<'_>, pos: Pos, entity: &mut ModBlockEntity, rpm: f32) -> bool {
+pub(super) fn tick(game: &mut Game<'_>, pos: Pos, entity: &mut ModBlockEntity, rpm: f32) -> bool {
     if entity.id != ID {
         return false;
     }
@@ -1373,7 +1372,7 @@ fn rectangle(positions: [[f32; 3]; 4], uv: [[f32; 2]; 4]) -> Option<([[f32; 3]; 
     None
 }
 fn moving_model(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     draw: &mut BlockEntityDraw,
     model: &str,
     scroll: f32,
@@ -1400,7 +1399,7 @@ fn moving_model(
     }
 }
 pub(super) fn render_bounds(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     pos: Pos,
     entity: &ModBlockEntity,
     bounds: &mut [f32; 6],
@@ -1434,7 +1433,7 @@ fn render_yaw(facing: Direction) -> f32 {
 }
 
 pub(super) fn draw(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     pos: Pos,
     entity: &ModBlockEntity,
     draw: &mut BlockEntityDraw,
@@ -1549,7 +1548,7 @@ pub(super) fn draw(
     }
     true
 }
-fn draw_item(game: &GameLevel<'_>, draw: &mut BlockEntityDraw, origin: Pos, belt: Belt, item: &Moving) {
+fn draw_item(game: &Game<'_>, draw: &mut BlockEntityDraw, origin: Pos, belt: Belt, item: &Moving) {
     let partial = if belt.rpm == 0.0 { 1.0 } else { draw.partial };
     let offset = item.previous_position + (item.position - item.previous_position) * partial;
     let mut side =

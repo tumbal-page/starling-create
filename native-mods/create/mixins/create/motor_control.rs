@@ -2,7 +2,6 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Authoritative KineticScrollValueBehaviour settings. Client UI lives separately.
-use crate::game::GameLevel;
 use super::Game;
 use crate::containers::BlockEntity;
 use horizon_world::nbt::Tag;
@@ -22,7 +21,7 @@ thread_local! {
 pub(super) fn reset() {
     REQUESTS.with_borrow_mut(Vec::clear);
 }
-pub(super) fn receive(game: &mut GameLevel<'_>, player: u128, channel: &str, data: &[u8]) {
+pub(super) fn receive(game: &mut Game<'_>, player: u128, channel: &str, data: &[u8]) {
     if !game.native_on("create") {
         return;
     }
@@ -73,7 +72,7 @@ pub(super) fn receive(game: &mut GameLevel<'_>, player: u128, channel: &str, dat
         }
     });
 }
-pub(super) fn level_tick(game: &mut GameLevel<'_>) {
+pub(super) fn level_tick(game: &mut Game<'_>) {
     let dim = game.dim.id().to_owned();
     let world = game.native_world_dir();
     let players = game.native_server_players();

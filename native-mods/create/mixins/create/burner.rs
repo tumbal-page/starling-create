@@ -2,7 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // BlazeBurnerBlock / BlazeBurnerBlockEntity, pinned Create6.0.10.
-use crate::game::{Game, GameLevel};
+use crate::game::Game;
 use crate::{
     containers::{BlockEntity, ModBlockEntity},
     items::ItemStack,
@@ -93,7 +93,7 @@ fn store(nbt: &mut Compound, state: Burner) {
         nbt.insert("burnTimeRemaining".into(), Tag::Int(state.remaining));
     }
 }
-fn current(game: &GameLevel<'_>, pos: Pos) -> Option<Burner> {
+fn current(game: &Game<'_>, pos: Pos) -> Option<Burner> {
     if game.native_block(pos) != BLOCK {
         return None;
     }
@@ -106,7 +106,7 @@ fn current(game: &GameLevel<'_>, pos: Pos) -> Option<Burner> {
     }
     load(&entity.nbt, heat)
 }
-fn candidate(game: &GameLevel<'_>, stack: &ItemStack) -> Candidate {
+fn candidate(game: &Game<'_>, stack: &ItemStack) -> Candidate {
     if game.remote.is_some() {
         // NeoForge synchronizes these merged server definitions. The native
         // client waits for the complete world snapshot rather than guessing
@@ -131,12 +131,12 @@ fn candidate(game: &GameLevel<'_>, stack: &ItemStack) -> Candidate {
         tag("create:blaze_burner_fuel/regular"),
     )
 }
-fn set_heat(game: &mut GameLevel<'_>, pos: Pos, heat: Heat) {
+fn set_heat(game: &mut Game<'_>, pos: Pos, heat: Heat) {
     if game.native_set_block_property(pos, "blaze", heat_name(heat)) {
         game.native_block_entity_sync(pos);
     }
 }
-pub(super) fn tick(game: &mut GameLevel<'_>, pos: Pos, entity: &mut ModBlockEntity) {
+pub(super) fn tick(game: &mut Game<'_>, pos: Pos, entity: &mut ModBlockEntity) {
     if entity.id != ENTITY {
         return;
     }
@@ -152,14 +152,14 @@ pub(super) fn tick(game: &mut GameLevel<'_>, pos: Pos, entity: &mut ModBlockEnti
     state.tick(|heat| set_heat(game, pos, heat));
     store(&mut entity.nbt, state);
 }
-fn play(game: &mut GameLevel<'_>, pos: Pos, sound: &str, ambient: bool) {
+fn play(game: &mut Game<'_>, pos: Pos, sound: &str, ambient: bool) {
     let volume = 0.125 + game.world.random.next_float() * 0.125;
     let pitch = if ambient { 1.15 } else { 0.75 } - game.world.random.next_float() * 0.25;
     game.with_level(|_, level, _| {
         level.native_play_sound(sound, pos.map(|v| f64::from(v) + 0.5), 4, volume, pitch);
     });
 }
-pub(super) fn reacts(game: &GameLevel<'_>, pos: Pos) -> bool {
+pub(super) fn reacts(game: &Game<'_>, pos: Pos) -> bool {
     if !game.native_on("create")
         || game.keys.contains(&winit::keyboard::KeyCode::ShiftLeft)
             && (game
@@ -191,7 +191,7 @@ pub(super) fn reacts(game: &GameLevel<'_>, pos: Pos) -> bool {
 /// Source client useItemOn: predict fuel storage and the particle burst, while
 /// leaving inventory and block heat to the authoritative server. In particular,
 /// applyCreativeFuel chooses the burst BEFORE the server skips FADING.
-pub(super) fn predict_client(game: &mut GameLevel<'_>, pos: Pos) -> bool {
+pub(super) fn predict_client(game: &mut Game<'_>, pos: Pos) -> bool {
     if game.remote.is_none() || !reacts(game, pos) {
         return false;
     }
@@ -228,7 +228,7 @@ pub(super) fn predict_client(game: &mut GameLevel<'_>, pos: Pos) -> bool {
     super::create_port_burner_presentation::burst(game, pos, soul);
     true
 }
-fn give(game: &mut GameLevel<'_>, stack: ItemStack) {
+fn give(game: &mut Game<'_>, stack: ItemStack) {
     let id = game.native_acting_id();
     if let Some(rest) = game.native_give_stack(id, stack)
         && let Some(eye) = game.eye_position()
@@ -236,7 +236,7 @@ fn give(game: &mut GameLevel<'_>, stack: ItemStack) {
         game.throw_from_eyes(rest, eye, false);
     }
 }
-pub(super) fn right_click(game: &mut GameLevel<'_>, pos: Pos) -> bool {
+pub(super) fn right_click(game: &mut Game<'_>, pos: Pos) -> bool {
     if !reacts(game, pos) {
         return false;
     }
@@ -297,7 +297,7 @@ pub(super) fn right_click(game: &mut GameLevel<'_>, pos: Pos) -> bool {
     }
     true
 }
-pub(super) fn analog(game: &GameLevel<'_>, state: BlockStateId, out: &mut i32) {
+pub(super) fn analog(game: &Game<'_>, state: BlockStateId, out: &mut i32) {
     if game.native_state_block(state) == Some(BLOCK) {
         *out = game
             .registry
@@ -310,7 +310,7 @@ pub(super) fn analog(game: &GameLevel<'_>, state: BlockStateId, out: &mut i32) {
 /// Pending client load-tag boundary: raw adapter uses the exact validated
 /// type/block/compound guards of Game::remote_block_entity_data. Java read
 /// resets absent canonical fields, whereas Horizon's default merge retains them.
-pub(super) fn packet(game: &mut GameLevel<'_>, pos: Pos, kind: i32, tag: &Tag) {
+pub(super) fn packet(game: &mut Game<'_>, pos: Pos, kind: i32, tag: &Tag) {
     let Tag::Compound(fields) = tag else {
         return;
     };

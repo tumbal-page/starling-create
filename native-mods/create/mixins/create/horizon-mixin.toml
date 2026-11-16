@@ -763,11 +763,11 @@ bindings = [
 
 [[injection]]
 id = "basin-custom-fluid-fill"
-target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_fluid_fill"
+target = "horizon_client::game::native_hooks::Game<'_>::native_custom_fluid_fill"
 kind = "HEAD"
 helper = "fluid-custom_fluid_fill.rs"
 bindings = [
- {name="game",ty="&mut crate::game::GameLevel<'_>",value="&mut *self"},
+ {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
  {name="pos",ty="[i32; 3]",value="pos"},
  {name="side",ty="Option<horizon_core::geometry::Direction>",value="side"},
  {name="resource",ty="&crate::mod_api::NativeFluidStack",value="resource"},
@@ -777,11 +777,11 @@ bindings = [
 
 [[injection]]
 id = "basin-custom-fluid-drain"
-target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_fluid_drain"
+target = "horizon_client::game::native_hooks::Game<'_>::native_custom_fluid_drain"
 kind = "HEAD"
 helper = "fluid-custom_fluid_drain.rs"
 bindings = [
- {name="game",ty="&mut crate::game::GameLevel<'_>",value="&mut *self"},
+ {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
  {name="pos",ty="[i32; 3]",value="pos"},
  {name="side",ty="Option<horizon_core::geometry::Direction>",value="side"},
  {name="request",ty="&crate::mod_api::NativeFluidDrain",value="request"},
@@ -852,11 +852,11 @@ source="burner_prediction.rs"
 
 [[injection]]
 id="burner-server-entity"
-target="horizon_client::game::native_hooks::GameLevel<'_>::native_item_interact_mob"
+target="horizon_client::game::native_hooks::Game<'_>::native_item_interact_mob"
 kind="HEAD"
 helper="burner_interact_entity.rs"
 bindings=[
- {name="game",ty="&mut crate::game::GameLevel<'_>",value="&mut *self"},
+ {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
  {name="entity",ty="i32",value="entity"},
  {name="kind",ty="&str",value="kind"},
  {name="swing",ty="&mut Option<bool>",value="&mut *swing"},
@@ -1016,11 +1016,11 @@ source = "item_contact.rs"
 
 [[injection]]
 id = "item-after-vertical-collision"
-target = "horizon_client::game::native_hooks::GameLevel<'_>::native_item_after_vertical_collision"
+target = "horizon_client::game::native_hooks::Game<'_>::native_item_after_vertical_collision"
 kind = "HEAD"
 helper = "item_after_vertical_collision.rs"
 bindings = [
- {name="game",ty="&mut crate::game::GameLevel<'_>",value="&mut *self"},
+ {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
  {name="dimension",ty="&str",value="dimension"},
  {name="client",ty="bool",value="client"},
  {name="entity",ty="u32",value="entity"},

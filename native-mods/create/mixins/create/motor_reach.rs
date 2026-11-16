@@ -5,7 +5,6 @@
 // Player.canInteractWithBlock(pos, 20): eye-to-block-AABB distance, not a sphere
 // around the block center. Actual player dimensions and attributes stay native.
 use crate::game::Game;
-use crate::game::GameLevel;
 
 fn within_configuration_range(eye: [f64; 3], pos: [i32; 3], interaction_range: f64) -> bool {
     let distance_squared: f64 = eye
@@ -21,7 +20,7 @@ fn within_configuration_range(eye: [f64; 3], pos: [i32; 3], interaction_range: f
     distance_squared < range * range
 }
 
-impl GameLevel<'_> {
+impl Game<'_> {
     /// Player-only admission check, also before the queued request's dimension
     /// is in place. The caller must separately check its world, dimension and
     /// loaded target immediately before applying the setting.

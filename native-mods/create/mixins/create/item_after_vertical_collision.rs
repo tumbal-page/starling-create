@@ -1,7 +1,7 @@
 // Pinned pending native fragment: the actual active stack is owned by the
 // movement caller. Setting discard removes that entity without undoing collision.
 fn create_item_after_vertical_collision(
-    game: &mut crate::game::GameLevel<'_>,
+    game: &mut crate::game::Game<'_>,
     dimension: &str,
     client: bool,
     entity: u32,
