@@ -1159,17 +1159,17 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
             }) else {
                 return stack.clone();
             };
-            let Some(BlockEntity::Mod(e)) =
-                self.game
-                    .world
-                    .block_entities
-                    .get(&(controller[0], controller[1], controller[2]))
-            else {
-                return stack.clone();
+            let b = match self.game.with_level(|_, level, _| {
+                let Some(BlockEntity::Mod(e)) =
+                    level.world.block_entities.get(&(controller[0], controller[1], controller[2]))
+                else {
+                    return None;
+                };
+                Some(belt(level, controller, e, number(&e.nbt, "Speed")))
+            }) {
+                Some(b) => b,
+                None => return stack.clone(),
             };
-            let b = self.game.with_level(|_, level, _| {
-                belt(level, controller, e, number(&e.nbt, "Speed"))
-            });
             if contents.insert_direct(b, index, item, from, true, false) {
                 self.game.with_level(|_, level, _| {
                     save_controller(level, controller, &mut contents);
