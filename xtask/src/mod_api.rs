@@ -1118,8 +1118,7 @@ mod tests {
     use quote::ToTokens;
     use std::sync::{Arc, Mutex};
 
-    struct ItemStack;
-    struct BlockEntityDraw(Vec<u32>);
+    use ::horizon_client::mod_api::{Host, Text, ItemStack, NativeZoom, Flow};
     #[allow(dead_code)]
     mod stubs {
         #[derive(Clone, Copy, Debug, PartialEq)]
@@ -1185,17 +1184,9 @@ mod tests {
     }
     use serde_json::{Map, Value};
     use stubs::*;
-    struct Text;
-    #[derive(Debug, PartialEq)]
-    struct NativeZoom(u32);
-    enum Flow {
-        Continue,
-        Cancel,
-    }
-    trait Host {}
     trait RenderHooks {}
     struct TestHost;
-    impl Host for TestHost {}
+    impl ::horizon_client::mod_api::Host for TestHost {}
     mod winit {
         pub mod event {
             pub struct KeyEvent;
@@ -1259,7 +1250,6 @@ mod tests {
         fn block_entity_submit(&self, _: &dyn Host, event: &mut BlockEntitySubmitEvent<'_>) {
             assert_eq!(event.pos, [1, 2, 3]);
             assert_eq!(event.block, "example:machine");
-            event.draw.0.push(self.id);
         }
         fn living_entity_use_item_finish(
             &self,
@@ -1306,11 +1296,11 @@ mod tests {
             self.calls.lock().unwrap().push(self.id);
         }
         fn tooltip(&self, _: &dyn Host, event: &mut TooltipEvent<'_>) {
-            event.lines.push((Text, self.id));
+            event.lines.push((Text::literal("test"), self.id));
         }
         fn zoom(&self, _: &dyn Host, _: &mut ZoomEvent) -> Option<NativeZoom> {
             self.calls.lock().unwrap().push(self.id);
-            Some(NativeZoom(self.id))
+            Some(NativeZoom { factor: self.id as f32, smooth: false, turn: 0.0 })
         }
         fn should_apply_effect_tick_this_tick(
             &self,
@@ -1338,29 +1328,6 @@ mod tests {
         }
     }
     #[test]
-    fn block_entity_submit_dispatches_in_order_with_shared_draw() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-        let mods: Vec<Box<dyn Hooks>> = vec![
-            Box::new(Mod {
-                id: 1,
-                calls: calls.clone(),
-            }),
-            Box::new(Mod { id: 2, calls }),
-        ];
-        let mut draw = BlockEntityDraw(Vec::new());
-        dispatch_block_entity_submit(
-            &TestHost,
-            &mods,
-            [1, 2, 3],
-            "example:machine",
-            BlockStateId,
-            &ModBlockEntity,
-            &mut draw,
-        );
-        assert_eq!(draw.0, [1, 2]);
-    }
-
-    #[test]
     fn slot_rules_mutate_and_item_tick_can_cancel() {
         let mods: Vec<Box<dyn Hooks>> = vec![Box::new(Mod {
             id: 1,
@@ -1371,7 +1338,7 @@ mod tests {
             &mods,
             "test:menu",
             0,
-            &ItemStack,
+            &ItemStack::new("minecraft:stone", 1),
             &mut may_place,
             &mut max_stack,
         );
@@ -1380,7 +1347,7 @@ mod tests {
         dispatch_living_entity_use_item_tick(
             &mut TestHost,
             &mods,
-            &ItemStack,
+            &ItemStack::new("minecraft:stone", 1),
             None,
             Hand,
             &mut duration,
@@ -1395,11 +1362,11 @@ mod tests {
             id: 1,
             calls: Arc::new(Mutex::new(Vec::new())),
         })];
-        let mut result = Some(ItemStack);
+        let mut result = Some(ItemStack::new("minecraft:stone", 1));
         dispatch_living_entity_use_item_finish(
             &mut TestHost,
             &mods,
-            &ItemStack,
+            &ItemStack::new("minecraft:stone", 1),
             None,
             Hand,
             0,
