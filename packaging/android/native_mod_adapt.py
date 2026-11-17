@@ -74,6 +74,13 @@ CHANGED = (
         r"d\.custom_name = Some\(bc::ITEM_NAME\.to_owned\(\)\);",
         "d.custom_name = Some(horizon_world::nbt::Tag::String(bc::ITEM_NAME.into()));",
     ),
+    # Android's shared storage has no file locks (ENOSYS, os error 38): the game opens a world
+    # unlocked there (save.rs), and a mod that locks a file of its own (Create's bundled content)
+    # goes on unlocked too instead of failing the whole step.
+    (
+        r"\block\.lock\(\)\?;",
+        "if let Err(e) = lock.lock() { if e.kind() != std::io::ErrorKind::Unsupported && e.raw_os_error() != Some(38) { return Err(e); } }",
+    ),
 )
 
 
