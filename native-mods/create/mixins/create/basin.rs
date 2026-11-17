@@ -4,9 +4,8 @@
 // Create 6.0.10 BasinBlockEntity/BasinInventory/BasinRenderer adapter.
 // Heat-aware, unfiltered, downward basin; two canonical water/lava tank halves.
 // Unknown tanks, filters and spouts remain unsupported; never discard them.
-use crate::game::{Game, GameLevel};
 use super::{
-    create_port_fluid_codec as fluids, native_block_entity_draw::BlockEntityDraw,
+    Game, GameLevel, create_port_fluid_codec as fluids, native_block_entity_draw::BlockEntityDraw,
 };
 use crate::{
     containers::{BlockEntity, ModBlockEntity, ModContainer, ModRevision},
@@ -469,7 +468,7 @@ fn set_tanks(entity: &mut ModBlockEntity, input: Tag, output: Tag) -> bool {
     }
     changed
 }
-fn fluid_state(game: &GameLevel<'_>, pos: Pos) -> Option<Basin> {
+fn fluid_state(game: &Game<'_>, pos: Pos) -> Option<Basin> {
     let BlockEntity::Mod(entity) = game.world.block_entities.get(&(pos[0], pos[1], pos[2]))? else {
         return None;
     };
@@ -524,7 +523,7 @@ pub(super) fn custom_fluids(block: &str, custom: &mut bool) {
     }
 }
 pub(super) fn fluid_tanks(
-    game: &GameLevel<'_>,
+    game: &Game<'_>,
     pos: Pos,
     _side: Option<horizon_core::geometry::Direction>,
     out: &mut Option<Vec<NativeFluidTankView>>,
@@ -552,7 +551,7 @@ pub(super) fn fluid_fill(
     action: NativeFluidAction,
     out: &mut Option<i32>,
 ) {
-    let Some(mut state) = game.with_level(|_, level, _| fluid_state(level, pos)) else {
+    let Some(mut state) = fluid_state(game, pos) else {
         return;
     };
     *out = Some(0);
@@ -580,7 +579,7 @@ pub(super) fn fluid_drain(
     action: NativeFluidAction,
     out: &mut Option<NativeFluidStack>,
 ) {
-    let Some(mut state) = game.with_level(|_, level, _| fluid_state(level, pos)) else {
+    let Some(mut state) = fluid_state(game, pos) else {
         return;
     };
     let selected;
@@ -1017,7 +1016,7 @@ fn draw_fluids(
             continue;
         }
         let next = x + (units / total).clamp(0.0, 1.0) * 12.0 / 16.0;
-        game.with_level(|_, level, _| level.native_draw_fluid_box(
+        game.native_draw_fluid_box(
             draw,
             &native_fluid(&fluid),
             [x, 2.0 / 16.0, 2.0 / 16.0, next, height, 14.0 / 16.0],
@@ -1028,7 +1027,7 @@ fn draw_fluids(
                 // This is explicit because Horizon stores block sprites in arrays.
                 uv_shrink_ratio: 4.0 / 2048.0,
             },
-        ));
+        );
         x = next;
     }
     height

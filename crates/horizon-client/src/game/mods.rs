@@ -61,6 +61,9 @@ pub(super) fn register_standalone_models() {
     let mut names = Vec::new();
     Game::native_standalone_models(&mut names);
     horizon_client::models::register_standalone(names);
+    // Not yet handed on: no `terrain_model` registry in the renderer to register them with.
+    let mut sprites = Vec::new();
+    Game::native_terrain_model_sprites(&mut sprites);
 }
 
 /// What [`content_root`] tells a loading screen while it works.

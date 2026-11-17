@@ -89,6 +89,17 @@ kind = "HEAD"
 helper = "assets_startup.rs"
 bindings = [{ name = "root", ty = "&mut std::path::PathBuf", value = "&mut root" }]
 
+[[injection]]
+id = "local-assets-reload"
+target = "horizon_client::game::packs::stage_pack"
+kind = "MODIFY_VARIABLE"
+variable = { name = "root", ordinal = 1, at = "STORE" }
+require = 1
+ordinal = 0
+helper = "assets_root.rs"
+bindings = [
+  { name = "root", ty = "std::path::PathBuf", value = "$value" },
+]
 
 [[injection]]
 id = "entity"
@@ -217,7 +228,7 @@ kind = "HEAD"
 cancellable = true
 helper = "depot_prediction.rs"
 bindings = [
-  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
   { name = "hit", ty = "&crate::game::Hit", value = "hit" },
   { name = "held", ty = "Option<&crate::items::ItemStack>", value = "held" },
 ]
@@ -267,11 +278,11 @@ source = "motor_value_world.rs"
 [[injection]]
 id = "motor-world-display"
 # world_canvas is pending upstream API stamping; exact source pin above applies.
-target = "horizon_client::game::native_hooks::GameLevel<'_>::native_world_submit"
+target = "horizon_client::game::native_hooks::Game<'_>::native_world_submit"
 kind = "HEAD"
 helper = "motor_world.rs"
 bindings = [
-  {name="game",ty="&crate::game::GameLevel<'_>",value="self"},
+  {name="game",ty="&crate::game::Game<'_>",value="self"},
   {name="draw",ty="&mut crate::game::native_world_draw::NativeWorldDraw",value="&mut *draw"},
 ]
 
@@ -741,7 +752,7 @@ source = "fluid_codec.rs"
 
 [[injection]]
 id = "basin-custom-block-fluids"
-target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_block_fluids"
+target = "horizon_client::game::native_hooks::Game<'_>::native_custom_block_fluids"
 kind = "HEAD"
 helper = "fluid-custom_block_fluids.rs"
 bindings = [
@@ -751,11 +762,11 @@ bindings = [
 
 [[injection]]
 id = "basin-custom-fluid-tanks"
-target = "horizon_client::game::native_hooks::GameLevel<'_>::native_custom_fluid_tanks"
+target = "horizon_client::game::native_hooks::Game<'_>::native_custom_fluid_tanks"
 kind = "HEAD"
 helper = "fluid-custom_fluid_tanks.rs"
 bindings = [
- {name="game",ty="&crate::game::GameLevel<'_>",value="self"},
+ {name="game",ty="&crate::game::Game<'_>",value="self"},
  {name="pos",ty="[i32; 3]",value="pos"},
  {name="side",ty="Option<horizon_core::geometry::Direction>",value="side"},
  {name="out",ty="&mut Option<Vec<crate::mod_api::NativeFluidTankView>>",value="&mut *out"},
@@ -802,8 +813,17 @@ name = "create_port_burner_presentation"
 source = "burner_presentation.rs"
 
 [[injection]]
+id = "burner-standalone-sprites"
+target = "horizon_client::game::native_hooks::Game<'_>::native_terrain_model_sprites"
+kind = "HEAD"
+helper = "burner_sprites.rs"
+bindings = [
+ {name="sprites",ty="&mut Vec<String>",value="&mut *sprites"},
+]
+
+[[injection]]
 id = "burner-stateful-entity"
-target = "horizon_client::game::native_hooks::GameLevel<'_>::native_stateful_block_entity"
+target = "horizon_client::game::native_hooks::Game<'_>::native_stateful_block_entity"
 kind = "HEAD"
 helper = "burner_stateful.rs"
 bindings = [
@@ -908,11 +928,11 @@ bindings=[{name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"}]
 
 [[injection]]
 id = "burner-clone-item"
-target = "horizon_client::game::native_hooks::GameLevel<'_>::native_block_clone_item"
+target = "horizon_client::game::native_hooks::Game<'_>::native_block_clone_item"
 kind = "HEAD"
 helper = "burner_clone_item.rs"
 bindings = [
- {name="game",ty="&crate::game::GameLevel<'_>",value="self"},
+ {name="game",ty="&crate::game::Game<'_>",value="self"},
  {name="pos",ty="[i32; 3]",value="pos"},
  {name="stack",ty="&mut Option<crate::items::ItemStack>",value="&mut *stack"},
 ]
@@ -923,7 +943,7 @@ hook="client_resources_reloaded"
 hook_version=1
 kind="HEAD"
 helper="burner_resources.rs"
-bindings=[{name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"}]
+bindings=[{name="game",ty="&crate::game::Game<'_>",value="self"}]
 
 [[module]]
 id="burner-sync"
@@ -965,7 +985,7 @@ hook_version=1
 kind="HEAD"
 helper="burner_sync_logout.rs"
 bindings=[
- {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
+ {name="game",ty="&crate::game::Game<'_>",value="self"},
  {name="player",ty="u128",value="player"},
 ]
 
@@ -976,7 +996,7 @@ hook_version=1
 kind="HEAD"
 helper="burner_sync_world.rs"
 bindings=[
- {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
+ {name="game",ty="&crate::game::Game<'_>",value="self"},
  {name="phase",ty="crate::mod_api::WorldPhase",value="phase"},
 ]
 
@@ -1023,9 +1043,7 @@ bindings = [
  {name="game",ty="&mut crate::game::Game<'_>",value="&mut *self"},
  {name="dimension",ty="&str",value="dimension"},
  {name="client",ty="bool",value="client"},
- {name="entity",ty="u32",value="entity"},
  {name="state",ty="horizon_world::registry::BlockStateId",value="state"},
- {name="block_pos",ty="[i32; 3]",value="block_pos"},
  {name="item_pos",ty="[f64; 3]",value="item_pos"},
  {name="stack",ty="&mut crate::items::ItemStack",value="&mut *stack"},
  {name="discard",ty="&mut bool",value="&mut *discard"},

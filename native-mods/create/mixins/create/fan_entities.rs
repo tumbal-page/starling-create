@@ -4,8 +4,7 @@
 // AirCurrent entity motion and AllFanProcessingTypes server entity effects.
 // Player force runs on its client; the server applies hazards and clears fall
 // bookkeeping. Sending an additional server impulse would apply the force twice.
-use crate::game::Game;
-use crate::game::GameLevel;
+use super::Game;
 use crate::game::commands::Target;
 use create_engine::{
     fan::{self, ProcessingType, Segment},
@@ -376,7 +375,7 @@ fn affect_player(game: &mut Game<'_>, kind: ProcessingType) {
         };
         player.set_remaining_fire_ticks(0);
         let at = [player.position.x, player.position.y, player.position.z];
-        let pitch = 1.6 + game.with_level(|_, level, _| (level.world.random.next_float() - level.world.random.next_float()) * 0.4);
+        let pitch = 1.6 + (game.world.random.next_float() - game.world.random.next_float()) * 0.4;
         sound(
             game,
             "minecraft:entity.generic.extinguish_fire",
@@ -458,7 +457,7 @@ fn affect_mob(game: &mut Game<'_>, index: usize, kind: ProcessingType) {
         game.mod_effect_added(status.id, Some(id as i32), status.amplifier, new);
     }
     if effects.extinguish {
-        let pitch = 1.6 + game.with_level(|_, level, _| (level.world.random.next_float() - level.world.random.next_float()) * 0.4);
+        let pitch = 1.6 + (game.world.random.next_float() - game.world.random.next_float()) * 0.4;
         sound(
             game,
             "minecraft:entity.generic.extinguish_fire",
@@ -467,7 +466,7 @@ fn affect_mob(game: &mut Game<'_>, index: usize, kind: ProcessingType) {
             pitch,
         );
     }
-        match effects.horse {
+    match effects.horse {
         Horse::Progress { value, sound_pitch } => {
             if let Some(pitch) = sound_pitch {
                 sound(game, "minecraft:particle.soul_escape", at, 1.0, pitch);

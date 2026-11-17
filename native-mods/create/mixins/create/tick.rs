@@ -3,7 +3,5 @@ fn create_on_tick(
     pos: [i32; 3],
     entity: &mut crate::containers::ModBlockEntity,
 ) {
-    game.with_level(|_, level, _| {
-        crate::game::create_port::tick(level, pos, entity);
-    });
+    crate::game::create_port::tick(game, pos, entity);
 }

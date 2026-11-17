@@ -2,7 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // SharedDepotBlockMethods.onLanded and MechanicalPressBlockEntity world input.
-use crate::game::Game;
+use super::Game;
 use crate::{containers::ModBlockEntity, items::ItemStack};
 pub(super) fn catch(game: &mut Game<'_>, pos: [i32; 3], entity: &mut ModBlockEntity) {
     if entity.items.iter().any(Option::is_some) {
@@ -39,9 +39,7 @@ pub(super) fn catch(game: &mut Game<'_>, pos: [i32; 3], entity: &mut ModBlockEnt
         rest.count -= accepted.count;
         if game.native_set_item_entity(&dim, dropped.id, rest) {
             entity.items[0] = Some(accepted);
-            game.with_level(|_, level, _| {
-                crate::game::create_port_sounds::land(level, pos);
-            });
+            crate::game::create_port_sounds::land(game, pos);
             break;
         }
     }

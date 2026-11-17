@@ -612,9 +612,7 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: Pos, _face: Pos) -> bool {
         });
         save_controller(game, controller, &mut inventory);
         if !taken.is_empty() {
-            game.with_level(|_, level, _| {
-                super::create_port_sounds::pickup(level, pos);
-            });
+            super::create_port_sounds::pickup(game, pos);
         }
         for stack in taken {
             return_to_player(game, pos, stack);
@@ -1095,7 +1093,10 @@ impl WorldHooks<'_, '_> {
 impl Hooks<ItemStack> for WorldHooks<'_, '_> {
     fn processor(&mut self, segment: i32) -> Option<bool> {
         let p = at(self.origin, self.belt.facing, self.belt.slope, segment);
-        Some(super::create_port_belt_press::available(self.game, [p[0], p[1] + 2, p[2]]))
+        Some(super::create_port_belt_press::available(
+            self.game,
+            [p[0], p[1] + 2, p[2]],
+        ))
     }
     fn processing_blocked(&mut self, segment: i32) -> bool {
         let p = at(self.origin, self.belt.facing, self.belt.slope, segment);
@@ -1150,13 +1151,15 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
             let Some(mut contents) = controller_inventory(self.game, controller) else {
                 return stack.clone();
             };
-            let b = match self.game.world.block_entities.get(&(controller[0], controller[1], controller[2])) {
-                Some(BlockEntity::Mod(e)) => Some(belt(self.game, controller, e, number(&e.nbt, "Speed"))),
-                _ => None,
-            };
-            let Some(b) = b else {
+            let Some(BlockEntity::Mod(e)) =
+                self.game
+                    .world
+                    .block_entities
+                    .get(&(controller[0], controller[1], controller[2]))
+            else {
                 return stack.clone();
             };
+            let b = belt(self.game, controller, e, number(&e.nbt, "Speed"));
             if contents.insert_direct(b, index, item, from, true, false) {
                 save_controller(self.game, controller, &mut contents);
                 return Stack {
@@ -1186,9 +1189,7 @@ impl Hooks<ItemStack> for WorldHooks<'_, '_> {
                 })
                 .unwrap_or(false);
             if moved {
-                self.game.with_level(|_, level, _| {
-                    super::create_port_sounds::depot(level, target);
-                });
+                super::create_port_sounds::depot(self.game, target);
                 self.game.native_block_entity_sync(target);
                 Stack {
                     count: stack.count - inserted.stack.count,

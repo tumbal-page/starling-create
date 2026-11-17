@@ -44,7 +44,7 @@ pub(super) fn reset(reload: bool) {
         WORLDS.with(|cache| cache.borrow_mut().clear());
     }
 }
-pub(super) fn maintenance(game: &mut Game<'_>) {
+pub(super) fn maintenance(game: &Game<'_>) {
     with_world(game, |world| {
         world.retain(|pos, _| game.world.loaded(pos[0], pos[2]) && game.native_block(*pos) == ID)
     });
@@ -63,7 +63,7 @@ pub(super) fn on_speed_changed(entity: &mut ModBlockEntity, previous: f32, curre
         entity.nbt.insert("NeedsUpdate".into(), Tag::Byte(1));
     }
 }
-pub(super) fn basin_removed(game: &mut Game<'_>, pos: Pos) {
+pub(super) fn basin_removed(game: &Game<'_>, pos: Pos) {
     let Some(crate::containers::BlockEntity::Mod(entity)) =
         game.world.block_entities.get(&(pos[0], pos[1], pos[2]))
     else {
@@ -190,9 +190,7 @@ pub(super) fn tick(
                         "ParticleItems".into(),
                         Tag::List(particles),
                     )]));
-                    game.with_level(|_, level, _| {
-                        super::create_port_sounds::press(level, pos, rpm);
-                    });
+                    super::create_port_sounds::press(game, pos, rpm);
                     sync = true;
                 }
                 Action::Finished => {

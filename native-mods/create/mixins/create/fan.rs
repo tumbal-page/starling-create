@@ -2,8 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // AirCurrent / FanProcessing adapter. No item components are used as entity data.
-use crate::game::Game;
-use super::native_block_entity_draw::BlockEntityDraw;
+use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::{containers::ModBlockEntity, items::ItemStack};
 use create_engine::{
     fan::{self, Processing, ProcessingType as Type, Segment},
@@ -507,10 +506,15 @@ impl fan::TransportedContext<ItemStack> for BeltContext<'_, '_> {
         let input = super::create_port_belt::game_stack(stack);
         let outputs = plan(self.game, &input, kind)?;
         Some(
-            roll(self.game, &input, &outputs, matches!(kind, Type::Splashing | Type::Haunting))
-                .into_iter()
-                .map(|output| super::create_port_belt::core_stack(self.game, output))
-                .collect(),
+            roll(
+                self.game,
+                &input,
+                &outputs,
+                matches!(kind, Type::Splashing | Type::Haunting),
+            )
+            .into_iter()
+            .map(|output| super::create_port_belt::core_stack(self.game, output))
+            .collect(),
         )
     }
     fn similar_angle(&mut self, input: &create_engine::transport::Stack<ItemStack>) -> i32 {

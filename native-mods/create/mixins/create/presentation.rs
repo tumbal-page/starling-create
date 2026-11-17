@@ -2,8 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Client adapter for crank interpolation, depot piles, goggles and kinetic feedback.
-use crate::game::Game;
-use super::native_block_entity_draw::BlockEntityDraw;
+use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::game::create_port::{integer, number};
 use crate::{
     containers::{BlockEntity, ModBlockEntity},

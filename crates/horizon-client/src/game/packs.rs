@@ -463,6 +463,10 @@ impl Game<'_> {
 /// `apply_staged_pack` does the GPU half and the swap): the overlay root, the
 /// models and sprites, the menu bundle, the pack's tables and its CPU mip
 /// chains, the sounds, armour, villager hats, waypoint styles and language.
+/// A reload has no one to tell about a mod's assets coming in. A named function rather than a
+/// closure at the call: horizon-mixins cannot inject into a statement that holds a closure, and a
+/// native mod hooks the `root` this call stores (`local-assets-reload`).
+fn ignore_content_note(_: super::mods::ContentNote<'_>) {}
 pub(super) fn stage_pack(
     vanilla_root: &Path,
     selected: &[String],
@@ -479,8 +483,13 @@ pub(super) fn stage_pack(
     let root = startup_root(vanilla_root, selected, server)?;
     // The blocks and items stay the start's: the registries can't change (world_content.rs).
     let started = super::world_content::running();
-    let root =
-        super::mods::content_root(&root, mods_enabled, dev_mods, Some(&started), &mut |_| {});
+    let root = super::mods::content_root(
+        &root,
+        mods_enabled,
+        dev_mods,
+        Some(&started),
+        &mut ignore_content_note,
+    );
     progress.set(1);
     // The world's models and sprites and the GUI atlas read the same root and nothing of
     // each other: about a second each, side by side.

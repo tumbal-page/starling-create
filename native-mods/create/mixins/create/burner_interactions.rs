@@ -2,7 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Create6.0.10 ac0c444: BlazeBurnerBlock/BlazeBurnerBlockItem/LitBlazeBurnerBlock.
-use crate::game::{Game, GameLevel};
+use super::Game;
 use crate::{containers::BlockEntity, items::ItemStack};
 use horizon_client::particles::{ParticleOptions, ParticleType};
 use horizon_core::random::RandomSource;
@@ -22,7 +22,7 @@ enum Action {
 }
 
 /// Only the base clone ID; the caller retains its normal Ctrl-pick NBT path.
-pub(super) fn clone_item(game: &GameLevel<'_>, pos: Pos) -> Option<&'static str> {
+pub(super) fn clone_item(game: &Game<'_>, pos: Pos) -> Option<&'static str> {
     match game.native_block(pos).as_str() {
         LIT => Some(EMPTY),
         BLOCK => Some(
@@ -198,17 +198,13 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: Pos) -> bool {
             } else {
                 EquipmentSlot::MainHand
             };
-            game.with_level(|_, level, _| {
-                level.damage_held_in_slot(1, slot);
-            });
+            game.damage_held_in_slot(1, slot);
             if let Some(state) = game.pack.assets.registry.default_state(LIT) {
                 game.native_set_block(game.dim.id(), pos, state, 3);
             }
         }
         Action::Extinguish => {
-            game.with_level(|_, level, _| {
-                level.damage_held_in_slot(1, EquipmentSlot::MainHand);
-            });
+            game.damage_held_in_slot(1, EquipmentSlot::MainHand);
             if let Some(state) = game.pack.assets.registry.default_state(BLOCK) {
                 game.native_set_block(game.dim.id(), pos, state, 3);
             }

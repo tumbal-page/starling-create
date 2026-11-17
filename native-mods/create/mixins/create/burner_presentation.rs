@@ -1,6 +1,6 @@
 // Source burner presentation and opt-in observation of the actual client renderer input.
 // No original resources are bundled; models/textures come from the player's pinned JAR.
-use crate::game::Game;
+use super::Game;
 use super::native_block_entity_draw::BlockEntityDraw;
 use crate::{
     containers::{BlockEntity, ModBlockEntity, ModRevision},

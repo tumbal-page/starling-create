@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: MIT
 // BeltPressingCallbacks adapter, pinned Create6.0.10. Ordinary pressing recipes
 // and default bulkPressing=false; no sequenced-assembly or basin compression.
-use crate::game::Game;
-use super::{create_port as port, create_port_belt as belt};
+use super::{Game, create_port as port, create_port_belt as belt};
 use crate::{containers::BlockEntity, items::ItemStack};
 use create_engine::{
     pressing::{self, BeltDecision, BeltPressContext, BeltPressState, PressCycle},

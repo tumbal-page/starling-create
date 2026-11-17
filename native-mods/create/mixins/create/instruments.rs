@@ -1,8 +1,7 @@
 // Copyright (c) The Create Team / The Creators of Create
 // SPDX-License-Identifier: MIT
 // GaugeRenderer's visible faces, dial pivot and comparator readout.
-use crate::game::Game;
-use super::native_block_entity_draw::BlockEntityDraw;
+use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::containers::ModBlockEntity;
 use create_engine::{kinetics::Axis, placement::Direction};
 thread_local! {static DIRTY:std::cell::RefCell<std::collections::BTreeSet<(String,[i32;3])>>=const{std::cell::RefCell::new(std::collections::BTreeSet::new())};}

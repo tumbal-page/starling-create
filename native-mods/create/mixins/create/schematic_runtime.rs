@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 // Create 6.0.10 SchematicPlacePacket/SchematicPrinter/BlockHelper adapter.
 // Identity transforms, source safe-NBT and explicit supported fixtures only.
-use crate::game::Game;
+use super::Game;
 use crate::{
     containers::BlockEntity,
     mod_api::{NativeCommand, NativeServerPlayer},

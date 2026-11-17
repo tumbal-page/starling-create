@@ -156,9 +156,7 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
                 for stack in drops {
                     give(game, stack, pos);
                 }
-                game.with_level(|_, level, _| {
-                    crate::game::create_port_sounds::wrench(level, pos, true);
-                });
+                crate::game::create_port_sounds::wrench(game, pos, true);
             }
             return true;
         }
@@ -169,13 +167,11 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
         } else {
             block.as_str()
         };
-            if secondary(game) {
+        if secondary(game) {
             if block == "create:large_water_wheel" {
                 let mut canceled = false;
                 super::create_port_placement::destroy(game, pos, &mut canceled);
-                game.with_level(|_, level, _| {
-                    crate::game::create_port_sounds::wrench(level, pos, true);
-                });
+                super::create_port_sounds::wrench(game, pos, true);
                 return true;
             }
             if block.ends_with("encased_shaft") {
@@ -204,18 +200,14 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
                     });
                 }
             }
-            game.with_level(|_, level, _| {
-                crate::game::create_port_sounds::wrench(level, pos, true);
-            });
+            crate::game::create_port_sounds::wrench(game, pos, true);
         } else if block == "create:large_water_wheel" {
             return false;
         } else if let Some(face) = Direction::from_vector(face) {
             let before_rotation = game.world.block(pos[0], pos[1], pos[2]);
             if block == "create:encased_chain_drive" {
                 if super::create_port_chain::wrench(game, pos, face) {
-                    game.with_level(|_, level, _| {
-                        crate::game::create_port_sounds::wrench(level, pos, false);
-                    });
+                    crate::game::create_port_sounds::wrench(game, pos, false);
                 }
             } else if let Some(axis) = game.native_block_property(pos, "axis") {
                 let axis = match axis.as_str() {
@@ -239,9 +231,7 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
                     },
                 );
                 if changed {
-                    game.with_level(|_, level, _| {
-                        crate::game::create_port_sounds::wrench(level, pos, false);
-                    });
+                    crate::game::create_port_sounds::wrench(game, pos, false);
                 }
             } else if let Some(direction) = game.native_block_property(pos, "facing")
                 && (block != "create:mechanical_press" || face.axis() == Axis::Y)
@@ -255,9 +245,7 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
                     "facing",
                     direction.clockwise(face.axis()).name(),
                 ) {
-                    game.with_level(|_, level, _| {
-                        crate::game::create_port_sounds::wrench(level, pos, false);
-                    });
+                    crate::game::create_port_sounds::wrench(game, pos, false);
                 }
             }
             if game.world.block(pos[0], pos[1], pos[2]) != before_rotation
@@ -319,9 +307,7 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
         };
         if let Some(target) = target {
             switch(game, pos, target);
-            game.with_level(|_, level, _| {
-                crate::game::create_port_sounds::casing(level, pos);
-            });
+            crate::game::create_port_sounds::casing(game, pos);
             return true;
         }
     }
@@ -336,9 +322,7 @@ pub(super) fn right_click(game: &mut Game<'_>, pos: [i32; 3], face: [i32; 3]) ->
             if consume {
                 game.consume_held();
             }
-            game.with_level(|_, level, _| {
-                crate::game::create_port_sounds::casing(level, pos);
-            });
+            crate::game::create_port_sounds::casing(game, pos);
         }
         return true;
     }

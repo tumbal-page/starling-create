@@ -4578,37 +4578,6 @@ impl Game<'_> {
     ) -> bool {
         self.with_level(|_, level, _| level.allow_cauldron_level_change(pos, from, to, reason))
     }
-    /// Fill a block's fluid tanks with `stack` through `side` (None = any side).
-    /// Returns accepted millibuckets. `Simulate` is read-only; `Execute` mutates.
-    #[allow(dead_code)]
-    pub(super) fn native_fluid_fill_stack(
-        &mut self,
-        _dimension: &str,
-        pos: [i32; 3],
-        side: Option<Direction>,
-        stack: &NativeFluidStack,
-        action: NativeFluidAction,
-    ) -> i32 {
-        let mut accepted = None;
-        self.native_custom_fluid_fill(pos, side, stack, action, &mut accepted);
-        accepted.unwrap_or(0)
-    }
-    /// Drain from a block's fluid tanks through `side` (None = any side)
-    /// matching `drain`. Returns the drained stack, or None. `Simulate` is
-    /// read-only; `Execute` mutates.
-    #[allow(dead_code)]
-    pub(super) fn native_fluid_drain_stack(
-        &mut self,
-        _dimension: &str,
-        pos: [i32; 3],
-        side: Option<Direction>,
-        drain: &NativeFluidDrain,
-        action: NativeFluidAction,
-    ) -> Option<NativeFluidStack> {
-        let mut out = None;
-        self.native_custom_fluid_drain(pos, side, drain, action, &mut out);
-        out
-    }
     /// Draws a still-fluid box under the current block-entity draw pose.
     /// Stub: fluid rendering not yet ported from Horizon.
     #[allow(dead_code)]

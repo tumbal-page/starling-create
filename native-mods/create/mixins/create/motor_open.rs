@@ -5,7 +5,5 @@ fn motor_open(
     swing: &mut bool,
     canceled: &mut bool,
 ) {
-    game.with_level(|_, level, _| {
-        crate::game::create_port_motor_value_ui::interaction(level, button, hand, swing, canceled);
-    });
+    crate::game::create_port_motor_value_ui::interaction(game, button, hand, swing, canceled);
 }

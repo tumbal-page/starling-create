@@ -5,7 +5,7 @@
 // GeneratingKineticBlockEntity, GaugeBlockEntity, Speed/StressGaugeBlockEntity,
 // IRotate.{SpeedLevel,StressImpact}, TooltipHelper and Catnip LangBuilder.
 // Catnip's bundled Ponder 1.0.82 license is MIT (LICENSE_Ponder).
-use crate::game::Game;
+use super::Game;
 use crate::containers::BlockEntity;
 use crate::game::create_port::number;
 use create_engine::kinetics::{Kind, Pos};

@@ -1799,6 +1799,50 @@ impl GameLevel<'_> {
     }
 }
 
+/// The same hooks on `Game`, where Horizon declares them. A native mod's mixin
+/// targets `Game<'_>::native_*` (the `create` mod's injections do), so these are the
+/// points it enters; `GameLevel` keeps its own copies for the callers that
+/// already hold one.
+impl Game<'_> {
+    /// Submit depth-tested world text and textured quads. `dispatch_world_submit`
+    /// wants a `LevelHost`, which only `GameLevel` is, so there is nothing for
+    /// other mods to receive here: this is the point a mod's injection enters.
+    pub(super) fn native_world_submit(&self, draw: &mut NativeWorldDraw) {
+        let _ = draw;
+    }
+
+    /// Opt a mod block into canonical custom fluid storage. API 452.
+    pub(super) fn native_custom_block_fluids(&self, block: &str, custom: &mut bool) {
+        mod_api::dispatch_custom_block_fluids(self, mod_api::mods(), block, custom);
+    }
+
+    /// Read the declared custom fluid tank capability.
+    pub(super) fn native_custom_fluid_tanks(
+        &self,
+        pos: [i32; 3],
+        side: Option<Direction>,
+        out: &mut Option<Vec<NativeFluidTankView>>,
+    ) {
+        mod_api::dispatch_custom_fluid_tanks(self, mod_api::mods(), pos, side, out);
+    }
+
+    /// Opt a non-vanilla block into a state-aware block entity factory. API 572.
+    pub(super) fn native_stateful_block_entity(&self, block: &str, stateful: &mut bool) {
+        mod_api::dispatch_stateful_block_entity(self, mod_api::mods(), block, stateful);
+    }
+
+    /// A block's clone item before Ctrl+Pick adds block-entity components. API 448.
+    pub(super) fn native_block_clone_item(
+        &self,
+        block: &str,
+        pos: [i32; 3],
+        state: BlockStateId,
+        stack: &mut Option<ItemStack>,
+    ) {
+        mod_api::dispatch_block_clone_item(self, mod_api::mods(), block, pos, state, stack);
+    }
+}
+
 /// The camera shake native mods ask for (`native_camera_shake`): turns in
 /// degrees, and an offset in blocks along the camera's right, up and back.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -2777,6 +2821,14 @@ impl Game<'_> {
     /// only a window bakes models. API 151.
     pub(super) fn native_standalone_models(models: &mut Vec<String>) {
         mod_api::dispatch_standalone_models(mod_api::mods(), models);
+    }
+    /// Explicit block-sheet sprites that no model names (for native UV shifts), asked once
+    /// beside the standalone models, before the resources load. A native mod's injection
+    /// enters here (the `create` mod's burner flame sprites). This `mod_api` has no
+    /// `terrain_model_sprites` hook to dispatch yet, and `register_standalone_models` has
+    /// no `terrain_model` registry to hand the names to: they are collected, not baked.
+    pub(super) fn native_terrain_model_sprites(sprites: &mut Vec<String>) {
+        let _ = sprites;
     }
     /// Options > Mods lists the native mods: push yours.
     pub(super) fn native_mods(&mut self, mods: &mut Vec<NativeMod>) {
@@ -9047,6 +9099,26 @@ impl Game<'_> {
             }
         }
         out
+    }
+    /// Custom fluid ownership, compiled once per block and indexed by state.
+    pub(super) fn native_custom_fluid_states(&self) -> Vec<bool> {
+        let registry = self.pack.assets.registry;
+        let mut by_block: FxHashMap<String, bool> = FxHashMap::default();
+        (0..registry.len() as u32)
+            .map(|i| {
+                let Some(state) = registry.state(horizon_world::registry::BlockStateId(i)) else {
+                    return false;
+                };
+                if state.name.starts_with("minecraft:") {
+                    return false;
+                }
+                *by_block.entry(state.name.clone()).or_insert_with(|| {
+                    let mut custom = false;
+                    self.native_custom_block_fluids(&state.name, &mut custom);
+                    custom
+                })
+            })
+            .collect()
     }
     /// The energy buffers of the mod blocks' block entities, by block state
     /// (`native_block_entity_energy`), checked as the containers are.

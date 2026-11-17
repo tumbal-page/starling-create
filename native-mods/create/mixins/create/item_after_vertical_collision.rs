@@ -4,14 +4,12 @@ fn create_item_after_vertical_collision(
     game: &mut crate::game::Game<'_>,
     dimension: &str,
     client: bool,
-    entity: u32,
     state: horizon_world::registry::BlockStateId,
-    block_pos: [i32; 3],
     item_pos: [f64; 3],
     stack: &mut crate::items::ItemStack,
     discard: &mut bool,
 ) {
     crate::game::create_port_item_contact::after_vertical_collision(
-        game, dimension, client, entity, state, block_pos, item_pos, stack, discard,
+        game, dimension, client, state, item_pos, stack, discard,
     );
 }

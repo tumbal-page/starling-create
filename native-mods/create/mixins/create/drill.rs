@@ -2,8 +2,7 @@
 // Copyright (c) 2026 create-horizon contributors
 // SPDX-License-Identifier: MIT
 // Stationary DrillBlockEntity and BlockBreakingKineticBlockEntity adapter.
-use crate::game::Game;
-use super::native_block_entity_draw::BlockEntityDraw;
+use super::{Game, native_block_entity_draw::BlockEntityDraw};
 use crate::containers::ModBlockEntity;
 use create_engine::{
     drilling::{Action, DrillCycle},

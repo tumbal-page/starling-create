@@ -1,5 +1,5 @@
 fn create_burner_clone_item(
-    game: &crate::game::GameLevel<'_>,
+    game: &crate::game::Game<'_>,
     pos: [i32; 3],
     stack: &mut Option<crate::items::ItemStack>,
 ) {
