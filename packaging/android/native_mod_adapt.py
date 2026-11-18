@@ -81,6 +81,13 @@ CHANGED = (
         r"\block\.lock\(\)\?;",
         "if let Err(e) = lock.lock() { if e.kind() != std::io::ErrorKind::Unsupported && e.raw_os_error() != Some(38) { return Err(e); } }",
     ),
+    # A resource overlay is built of symlinks, which Android's shared storage refuses (EACCES):
+    # the game builds its own in the private cache folder (`logging::cache_dir`), so a mod's goes
+    # there too instead of under the game folder.
+    (
+        r'&home\.join\("\.horizon-cache/create-assets/overlay"\)',
+        '&horizon_client::logging::cache_dir().join("create-assets/overlay")',
+    ),
 )
 
 
