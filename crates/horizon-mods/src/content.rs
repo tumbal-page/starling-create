@@ -323,6 +323,42 @@ pub struct BlockShapes {
     pub default: Option<Vec<[f64; 6]>>,
 }
 
+/// The querying entity class, captured by the real caller. Empty and position-only
+/// queries have no entity and always use the ordinary shape tables.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "lowercase")]
+pub enum ShapeEntityKind {
+    Item,
+    Player,
+    Living,
+    Other,
+}
+
+impl ShapeEntityKind {
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Item => "item",
+            Self::Player => "player",
+            Self::Living => "living",
+            Self::Other => "other",
+        }
+    }
+}
+
+/// Light emitted by a state, an integer from 0 to 15, selected by one property or an ordered
+/// tuple of properties as [`BlockShapes`]' boxes are.
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct StateLight {
+    #[serde(default)]
+    pub property: String,
+    #[serde(default)]
+    pub properties: Vec<String>,
+    #[serde(default)]
+    pub values: BTreeMap<String, u8>,
+    pub default: Option<u8>,
+}
+
 impl BlockShapes {
     pub fn property_names(&self) -> Vec<&str> {
         if self.property.is_empty() {
@@ -402,6 +438,12 @@ struct BlockFile {
     shapes: Option<BlockShapes>,
     collision_shapes: Option<BlockShapes>,
     #[serde(default)]
+    outline_context_shapes: BTreeMap<ShapeEntityKind, BlockShapes>,
+    #[serde(default)]
+    collision_context_shapes: BTreeMap<ShapeEntityKind, BlockShapes>,
+    interaction_shapes: Option<BlockShapes>,
+    state_light: Option<StateLight>,
+    #[serde(default)]
     state_properties: BTreeMap<String, StateProperty>,
     #[serde(default)]
     default_state: BTreeMap<String, String>,
@@ -441,6 +483,14 @@ pub struct Block {
     pub properties: BlockProperties,
     pub shapes: Option<BlockShapes>,
     pub collision_shapes: Option<BlockShapes>,
+    /// Outline boxes for a queried entity class; the ordinary shapes when a class has none.
+    pub outline_context_shapes: BTreeMap<ShapeEntityKind, BlockShapes>,
+    /// Collision boxes for a queried entity class; the ordinary shapes when a class has none.
+    pub collision_context_shapes: BTreeMap<ShapeEntityKind, BlockShapes>,
+    /// Boxes a player's pick and use ray tests, instead of the outline.
+    pub interaction_shapes: Option<BlockShapes>,
+    /// Light a state emits, over the block's `properties.light`.
+    pub state_light: Option<StateLight>,
     /// State properties of its own, which its template does not have.
     pub state_properties: BTreeMap<String, StateProperty>,
     /// State properties overlaid on the template default.
@@ -512,6 +562,7 @@ struct ItemFile {
     #[serde(default)]
     components: BTreeMap<String, serde_json::Value>,
     crafting_remainder: Option<String>,
+    place_block: Option<String>,
 }
 
 /// An item the mod adds: a vanilla template item's components under a new
@@ -529,6 +580,9 @@ pub struct Item {
     /// What it leaves in the crafting grid (`Item.Properties.craftRemainder`):
     /// a vanilla item or one of the mod's own.
     pub crafting_remainder: Option<String>,
+    /// A block this item places on use, in place of the template's behaviour: a vanilla block or
+    /// one in this item's namespace.
+    pub place_block: Option<String>,
 }
 
 /// `MobEffectCategory`.
@@ -1045,6 +1099,10 @@ impl Content {
                 properties: file.properties,
                 shapes: file.shapes,
                 collision_shapes: file.collision_shapes,
+                outline_context_shapes: file.outline_context_shapes,
+                collision_context_shapes: file.collision_context_shapes,
+                interaction_shapes: file.interaction_shapes,
+                state_light: file.state_light,
                 state_properties: file.state_properties,
                 default_state: file.default_state,
                 item: file.item,
@@ -1078,6 +1136,7 @@ impl Content {
                 rarity: file.rarity,
                 components: file.components,
                 crafting_remainder: file.crafting_remainder,
+                place_block: file.place_block,
             };
             check_item(&item).map_err(|e| format!("{name}: {e}"))?;
             if !ids.insert(item.id.clone()) {
@@ -1659,6 +1718,10 @@ capabilities = ["registries"]
                 template: "minecraft:iron_block".into(),
                 shapes: None,
                 collision_shapes: None,
+                outline_context_shapes: BTreeMap::new(),
+                collision_context_shapes: BTreeMap::new(),
+                interaction_shapes: None,
+                state_light: None,
                 state_properties: BTreeMap::new(),
                 default_state: BTreeMap::new(),
                 properties: BlockProperties {
